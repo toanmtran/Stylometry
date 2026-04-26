@@ -201,7 +201,7 @@ def main() -> None:
         results, FIG_PATH,
         title=(
             f"K-means — Effects of No. of Authors (K)  "
-            f"(articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
+            f"(Lesswrong 10 Authors, articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
         ),
     )
     print(f"\nSaved -> {FIG_PATH.relative_to(_PROJECT_ROOT)}")
