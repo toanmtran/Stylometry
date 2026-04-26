@@ -1,0 +1,13 @@
+Loading cleaned corpus …
+  total: 668 docs, 10 authors
+  after min_words=1526: 656 docs
+  after per-author era balancing (20/era): 400 docs
+  equal-length truncated to M=1526 words
+
+Building two-view feature matrix …
+  X shape: (400, 507)  (char n-grams: 400)
+
+Running consensus clustering, K=10, n_ensemble=80 …
+  ARI = 0.366
+
+Saved -> outputs\kmeans\cluster_10\clustering.png

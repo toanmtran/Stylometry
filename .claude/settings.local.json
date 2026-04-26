@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python demo_aeon.py)",
+      "Bash(python -m pip install -q nltk)",
+      "Bash(PYTHONIOENCODING=utf-8 python demo_aeon.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python demo_guardian.py)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import json; data=json.load\\(open\\('c:/Users/LENOVO/Downloads/Stylometry/dataset/Lesswrong \\(12 authors, 20 each\\)/lesswrong_abramdemski_data.json', encoding='utf-8-sig'\\)\\); print\\('type:', type\\(data\\).__name__\\); print\\('len:', len\\(data\\) if hasattr\\(data, '__len__'\\) else 'n/a'\\); print\\('keys of item 0:', list\\(data[0].keys\\(\\)\\) if isinstance\\(data, list\\) else 'not list'\\)\")",
+      "Bash(python demo_lesswrong12.py)",
+      "Bash(tee lesswrong12_output/run.log)",
+      "Bash(PYTHONIOENCODING=utf-8 python demo_lesswrong12.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python _diag_cleaner.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python _diag_shrink.py)",
+      "Bash(mkdir -p \"c:/Users/LENOVO/Downloads/Stylometry/lesswrong12_robust_output\")",
+      "Bash(PYTHONIOENCODING=utf-8 python demo_lesswrong12_robust.py)",
+      "Bash(tee lesswrong12_robust_output/run.log)",
+      "Bash(PYTHONIOENCODING=utf-8 python _probe_sentlen.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python _probe_quotes.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python _probe_quotes2.py)"
+    ]
+  }
+}
