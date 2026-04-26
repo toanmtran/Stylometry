@@ -8,12 +8,12 @@ a confound when comparing across M values or datasets.
 Two datasets are tested:
 
   cleaned_10 — 10 authors, 40 docs/author available after filtering.
-    M in {5, 10, 15, 20, 25}.
+    M in {5, 10, 15, 20, 25, 30}.
     Each trial randomly samples K=4 authors from 10, then M docs per author.
     Author-group sampling adds extra variance across trials.
 
   cleaned_4 — 4 authors (= K), 76-79 docs/author available after filtering.
-    M in {5, 10, 15, 20, 25, 30, 40, 50}.
+    M in {5, 10, 15, 20, 25, 30, 40, 50, 60}.
     C(4,4)=1 so every trial uses all 4 authors; only docs are randomly
     sampled. Variance comes purely from doc selection + KMeans init.
 
@@ -60,8 +60,8 @@ N_TRIALS = 50
 N_INIT = 10
 GLOBAL_SEED = 42
 
-M_VALUES_10 = [5, 10, 15, 20, 25]               # cleaned_10: 40 docs/author
-M_VALUES_4  = [5, 10, 15, 20, 25, 30, 40, 50]   # cleaned_4:  76-79 docs/author
+M_VALUES_10 = [5, 10, 15, 20, 25, 30]               # cleaned_10: 40 docs/author
+M_VALUES_4  = [5, 10, 15, 20, 25, 30, 40, 50, 60]  # cleaned_4:  76-79 docs/author
 
 OUT_DIR = _PROJECT_ROOT / "outputs" / "kmeans" / "effect_of_m"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
