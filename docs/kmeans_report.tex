@@ -133,7 +133,7 @@ where $C_k$ is the set of articles assigned to cluster $k$ and
 $\boldsymbol{\mu}_k$ is its centroid.
 
 \paragraph{Measuring performance: the Adjusted Rand Index.}
-A natural measure of clustering quality compares the predicted cluster
+A natural measure of clustering quality compares the cluster
 assignments against the true author labels by examining every \emph{pair} of
 articles. For a dataset of $n$ articles there are $\binom{n}{2}$ such pairs.
 For each pair, the clustering either \textbf{agrees} with the ground truth
@@ -155,8 +155,8 @@ exactly 0:
   \item \textbf{ARI $\approx 0$}: no better than random chance.
   \item \textbf{ARI $< 0$}: systematically worse than random.
 \end{itemize}
-ARI is also invariant to how cluster IDs are numbered, which matters because
-K-means returns arbitrary cluster IDs that need not match any author ordering.
+
+It is worth noting that depends only on which pairs of points are grouped together or separated, not on the labels assigned to the clusters.
 
 \paragraph{Results.}
 The 400-article input matrix is $400 \times 107$ after feature extraction.
@@ -387,11 +387,6 @@ $N=1{,}526$ words. For each $K \in \{2, 4, 6, 8, 10\}$ we run 50 trials:
 sample $K$ of the 10 authors at random, sample $M=15$ of each chosen
 author's 40 articles, truncate, extract features, cluster, record ARI.
 
-A note on $K=10$: there is exactly one way to choose all 10 authors, so the
-variance at $K=10$ comes only from article sampling and \code{k-means++}
-initialisation, not from author-group sampling. At smaller $K$, author-group
-sampling contributes an additional source of variance.
-
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_k/ari_vs_k.png}
@@ -401,8 +396,8 @@ sampling contributes an additional source of variance.
   \label{fig:k}
 \end{figure}
 
-The downward trend is clear. Performance degrades steadily as $K$ grows, in
-line with the intuition that more authors means more style overlaps.
+Within this corpus, the downward trend is clear and monotone, dropping from
+$0.60$ at $K=2$ to $0.40$ at $K=10$.
 
 % =============================================================================
 \section{Effect of Article Length ($N$)}
@@ -513,23 +508,22 @@ hypothesised \textbf{lower K-means performance in the post-2024 era than in
 the pre-2022 era}.
 
 \paragraph{Setup.}
-LessWrong 10 Authors, $K=4$, $M=15$, $N=1{,}526$, 50 trials per era. Each
-trial samples 4 of the 10 authors and 15 of each author's 20 era-restricted
+LessWrong 10 Authors, $K=4$, $M=10$, $N=1{,}526$, 50 trials per era. Each
+trial samples 4 of the 10 authors and 10 of each author's 20 era-restricted
 articles; the rest of the pipeline is unchanged. The two eras are sampled
 independently, making their error bars statistically comparable.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_era/ari_vs_era.png}
-  \caption{ARI by era ($K=4$, $M=15$, $N=1526$, 50 trials per era). Mean ARI
-  drops from \textbf{0.71} in the pre-2022 era to \textbf{0.56} in the
+  \caption{ARI by era ($K=4$, $M=10$, $N=1526$, 50 trials per era). Mean ARI
+  drops from \textbf{0.68} in the pre-2022 era to \textbf{0.54} in the
   post-2024 era.}
   \label{fig:era}
 \end{figure}
 
-The mean ARI drops from \textbf{0.71} (pre, $\leq 2022$) to \textbf{0.56}
-(post, $\geq 2024$), a substantial gap that is consistent with the AI
-hypothesis.
+The mean ARI drops from \textbf{0.68} (pre, $\leq 2022$) to \textbf{0.54}
+(post, $\geq 2024$), a substantial gap that is consistent with our expectation.
 
 \paragraph{Does this prove people are using AI to polish their writing?}
 Unfortunately, no. The drop is too large to dismiss as noise, but AI use is
@@ -543,11 +537,10 @@ only one of several plausible explanations:
         in response to current events. For instance, \code{kaj\_sotala}'s
         pre-2023 articles are mostly about biology, social dynamics, and
         self-improvement, while his post-2023 articles are mostly about AI.
-        A shift in topic mix can drag surface stylistic features along with it,
-        even when the author's underlying voice is unchanged.
+        A shift in topic mix can drag stylistic features along with it.
 \end{itemize}
 
-The era effect is real and worth noting; attributing it specifically to
+The era effect is real and worth noting; however, attributing it specifically to
 AI-assisted writing would require a controlled study that this experiment
 cannot deliver.
 
