@@ -7,7 +7,7 @@ balanced 20|20 between pre (year <= 2022) and post (year >= 2024).
 
 Fixed parameters across both eras:
   K = 4   (authors per trial, sampled from the 10 in cleaned_10)
-  M = 15  (docs per author, sampled from that author's 20 in this era)
+  M = 10  (docs per author, sampled from that author's 20 in this era)
   N = 1526  (words per doc — global min across cleaned_10)
 
 For each era we run N_TRIALS = 50 independent trials. Each trial:
@@ -52,7 +52,7 @@ from src.corpus import load_corpus
 
 DOC_LENGTH = 1526        # min word count across cleaned_10
 K = 4
-M = 15
+M = 10
 N_TRIALS = 50
 N_INIT = 10
 GLOBAL_SEED = 42

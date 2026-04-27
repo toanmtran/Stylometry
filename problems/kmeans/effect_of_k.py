@@ -13,6 +13,16 @@ and run N_TRIALS controlled trials per K in {2, 4, 6, 8, 10}:
 Holding docs/author constant isolates the K effect from data sparsity:
 a downward trend here is evidence that increasing the number of clusters
 itself degrades performance, independent of how much data each cluster sees.
+a downward trend here is evidence that, for this specific author pool, 
+increasing the number of clusters itself degrades performance, independent 
+of how much data each cluster sees.
+
+Limitations:
+  Because the experiment uses a closed pool of exactly 10 authors, the results
+  alone cannot statistically generalize to "any group of K authors." The trend
+  observed is empirically bound to the stylistic similarities of these 10 specific
+  individuals. To prove generalized degradation, K-author groups would need to be
+  sampled from a significantly larger, diverse population of authors.
 
 Each K uses its own independent RNG seeded by (GLOBAL_SEED, k). Adding
 or removing K values does not perturb the samples drawn for other K's.
