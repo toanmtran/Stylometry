@@ -55,7 +55,7 @@ N_PER_ERA = 20
 K_VALUES = [2, 4, 6, 8, 10]
 N_TRIALS = 50
 N_INIT = 10
-M_PER_AUTHOR = 10  # fixed docs/author at every K
+M_PER_AUTHOR = 15  # fixed docs/author at every K
 GLOBAL_SEED = 42
 
 OUT_DIR = _PROJECT_ROOT / "outputs" / "kmeans" / "effect_of_k"
