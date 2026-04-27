@@ -1,34 +1,102 @@
 # Neural Network — Stylometric Author Classification
 
-This directory contains feature datasets and evaluation results for an MLP-based authorship classifier trained on stylometric features extracted from LessWrong blog posts. The target authors are Eliezer Yudkowsky, Johnswentworth, Raemon, Scottalexander, and Zvi.
+MLP-based authorship classifier trained on stylometric features extracted from LessWrong blog posts. Five target authors: Eliezer Yudkowsky, Johnswentworth, Raemon, Scottalexander, and Zvi.
+
+---
+
+## Quick Start
+
+```bash
+# Train on the full dataset
+python neural_network_code.py
+
+# Train with outlier removal and early stopping
+python neural_network_code.py --remove-outliers --early-stopping
+
+# Train on a custom file, write to a custom output
+python neural_network_code.py --input my_features.csv --output results.md
+
+# Standalone outlier removal only
+python outlier_removal.py
+```
 
 ---
 
 ## Files
 
-### `author_features_extracted_full.csv`
-Full feature matrix containing 107 stylometric features per passage, including all authors and all passages (with outliers). Each row represents one passage identified by `author` and `passage_id`. Feature categories cover lexical richness, word-length distributions, sentence statistics, function-word frequencies, punctuation rates, POS-tag proportions, and character-level rates. This is the primary input used for model training and evaluation.
+### Python Scripts
 
-### `feature_extracted_without_outliers.csv`
-Same structure as `author_features_extracted_full.csv` but with statistical outlier passages removed per author. Outliers were identified and filtered to reduce noise before training. Used to assess whether removing extreme passages improves generalisation.
+#### `neural_network_code.py`
+Main training and evaluation script. Runs 5-fold stratified cross-validation across five network depth configurations and up to five feature-count subsets, then writes a Markdown report.
 
-### `evaluation_results_full_and_subsets (1).md`
-5-fold cross-validation results for the MLP trained on the **full dataset** (with outliers). Evaluates five feature-count subsets — top 15, 30, 50, 74, and all 107 features — crossed with five network depths: depth 1 (64 units), depth 2 (64→32), depth 3 (64→64→64), depth 10, and depth 50. Reports mean training/testing accuracy and per-author precision, recall, and F1-score. Key finding: top-74-features + depth-1 achieves the best test accuracy (~95.2%).
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--input` | `author_features_extracted_full.csv` | Input feature CSV |
+| `--output` | `evaluation_results_full_and_subsets.md` | Output Markdown report |
+| `--remove-outliers` | off | Apply Isolation Forest outlier removal per author before training |
+| `--early-stopping` | off | Enable early stopping in MLPClassifier |
 
-### `Results_without_outlier.md`
-Same experimental grid as above but trained and evaluated on the **outlier-removed dataset**. Generally shows higher test accuracy and lower overfitting at shallow depths. Best result: top-74-features + depth-1 reaches ~96.7% test accuracy, the highest across all experiments.
+#### `outlier_removal.py`
+Standalone script that applies per-author Isolation Forest (`contamination="auto"`) to `author_features_extracted_full.csv` and writes the cleaned result to `feature_extracted_without_outliers.csv`. Prints a per-author removal summary.
 
-### `with_early_stopping.md`
-Evaluation of the MLP on the **outlier-removed dataset with early stopping** enabled during training. Included to examine whether early stopping helps deeper networks (depth 10, 50) recover from vanishing-gradient / dead-neuron collapse. Depth-50 networks still collapse to near-random accuracy (~21%), confirming that architecture choice (shallow networks) matters more than early stopping for this task.
+---
+
+### Datasets
+
+#### `author_features_extracted_full.csv`
+Full feature matrix: 107 stylometric features per passage, all authors, all passages (outliers included). Each row is one passage keyed by `author` and `passage_id`. Feature categories:
+
+| Category | Examples |
+|----------|---------|
+| Lexical richness | `hapax_ratio`, `yule_k`, `simpson_d`, `brunet_w`, `honore_r` |
+| Word-length stats | `avg_word_len`, `std_word_len`, `word_len_1_frac` … `word_len_6_frac` |
+| Sentence stats | `avg_sent_len`, `std_sent_len`, `median_sent_len`, `max_sent_len` |
+| Function words | `fw_the`, `fw_be`, `fw_to` … (top-50 English function words) |
+| Punctuation rates | `punct_comma_rate`, `punct_semicolon_rate`, `punct_dash_rate` … |
+| Category rates | `cat_hedge_rate`, `cat_amplifier_rate`, `cat_discourse_rate` |
+| POS proportions | `pos_noun`, `pos_verb`, `pos_adj`, `pos_adv`, `pos_modal` … |
+| Surface features | `uppercase_ratio`, `contraction_rate`, `pronoun_start_rate` |
+| Character rates | `char_a_rate`, `char_e_rate`, `char_i_rate`, `char_o_rate`, `char_u_rate` |
+
+#### `feature_extracted_without_outliers.csv`
+Same structure as above with per-author outlier passages removed by Isolation Forest. Generated by `outlier_removal.py`. Reduces noise and consistently improves test accuracy by ~1–2%.
+
+---
+
+### Evaluation Results
+
+#### `evaluation_results_full_and_subsets (1).md`
+5-fold CV results on the **full dataset** (outliers included). Tests feature subsets of size 15, 30, 50, 74, and all 107, crossed with depths 1–3, 10, and 50. Best result: top-74 features + depth-1 → **95.16%** test accuracy.
+
+#### `Results_without_outlier.md`
+Same experimental grid on the **outlier-removed dataset**. Higher accuracy and less overfitting at all depths. Best result: top-74 features + depth-1 → **96.65%** test accuracy.
+
+#### `with_early_stopping.md`
+Same grid with **early stopping enabled**. Included to test whether early stopping rescues deep networks. Depth-50 still collapses to ~21% (majority-class prediction), confirming that shallow architectures matter more than early stopping for this task.
+
+---
+
+## Model Architecture
+
+| Setting | Value |
+|---------|-------|
+| Type | MLP (fully connected feedforward) |
+| Hidden activation | ReLU |
+| Output activation | Softmax (5 classes) |
+| Weight init | Xavier uniform |
+| Optimizer | Adam |
+| Loss | Cross-entropy |
+| Preprocessing | StandardScaler (fit on train fold only) |
+| Validation | 5-fold stratified cross-validation |
 
 ---
 
 ## Summary of Best Results
 
-| Dataset          | Features | Depth    | Test Accuracy |
-|------------------|----------|----------|---------------|
-| Full             | Top 74   | 1 (64,)  | 95.16%        |
-| Without outliers | Top 74   | 1 (64,)  | **96.65%**    |
-| With early stop  | Top 74   | 1 (64,)  | ~96.5%        |
+| Dataset          | Features | Depth   | Test Accuracy |
+|------------------|----------|---------|---------------|
+| Full             | Top 74   | 1 (64,) | 95.16%        |
+| Without outliers | Top 74   | 1 (64,) | **96.65%**    |
+| With early stop  | Top 74   | 1 (64,) | ~96.50%       |
 
 Shallow networks (depth 1–2) consistently outperform deeper ones. Depth ≥ 10 degrades accuracy; depth 50 collapses entirely to predicting a single class.
