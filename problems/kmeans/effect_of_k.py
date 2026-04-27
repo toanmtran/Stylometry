@@ -3,7 +3,7 @@ Effect of K on clustering quality (ARI vs K), holding per-cluster data
 density constant.
 
 We fix M_PER_AUTHOR docs/author at every K (so total docs grows with K)
-and run N_TRIALS controlled trials per K in {2, 4, 6, 8, 10}:
+and run N_TRIALS controlled trials per K in {2, 4, 6, 8, 10, 12, 14, 16}:
 
   1) Sample a K-author group (without replacement when enough unique
      groups exist; with replacement only when C(n_authors, K) < N_TRIALS).
@@ -11,18 +11,14 @@ and run N_TRIALS controlled trials per K in {2, 4, 6, 8, 10}:
   3) Cluster with K-means++ (n_init=10) and record ARI against true labels.
 
 Holding docs/author constant isolates the K effect from data sparsity:
-a downward trend here is evidence that increasing the number of clusters
-itself degrades performance, independent of how much data each cluster sees.
-a downward trend here is evidence that, for this specific author pool, 
-increasing the number of clusters itself degrades performance, independent 
+a downward trend here is evidence that, for this specific author pool,
+increasing the number of clusters itself degrades performance, independent
 of how much data each cluster sees.
 
-Limitations:
-  Because the experiment uses a closed pool of exactly 10 authors, the results
-  alone cannot statistically generalize to "any group of K authors." The trend
-  observed is empirically bound to the stylistic similarities of these 10 specific
-  individuals. To prove generalized degradation, K-author groups would need to be
-  sampled from a significantly larger, diverse population of authors.
+Dataset: LessWrong 25 Authors (lesswrong_large/cleaned_25) — 25 authors,
+each with at least 27 articles (most ≥38) of length ≥ 1526 words.
+The large author pool means every K in the sweep always has far more unique
+K-author groups than N_TRIALS, so all 50 trials per K draw distinct groups.
 
 Each K uses its own independent RNG seeded by (GLOBAL_SEED, k). Adding
 or removing K values does not perturb the samples drawn for other K's.
@@ -59,11 +55,10 @@ from src.corpus import load_corpus
 from src.viz import plot_ari_sweep
 
 
-MIN_WORDS = 1500
+MIN_WORDS = 1526
 DOC_LENGTH = 1526
-N_PER_ERA = 20
-K_VALUES = [2, 4, 6, 8, 10]
-N_TRIALS = 50
+K_VALUES = [2, 4, 6, 8, 10, 12]
+N_TRIALS = 100
 N_INIT = 10
 M_PER_AUTHOR = 15  # fixed docs/author at every K
 GLOBAL_SEED = 42
@@ -71,6 +66,9 @@ GLOBAL_SEED = 42
 OUT_DIR = _PROJECT_ROOT / "outputs" / "kmeans" / "effect_of_k"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 FIG_PATH = OUT_DIR / "ari_vs_k.png"
+
+
+_ENUM_THRESHOLD = 2_000_000  # max pool size to enumerate in memory
 
 
 def _sample_groups(
@@ -82,21 +80,36 @@ def _sample_groups(
 ) -> list[tuple[str, ...]]:
     """Sample K-author groups for one K value.
 
-    Uses no replacement when enough unique groups exist; if the group pool is
-    smaller than `n_trials`, it includes every unique group once and fills the
-    remainder by sampling groups with replacement.
+    For small pools (≤ _ENUM_THRESHOLD): enumerate all combinations and
+    sample/fill from them. For large pools: draw groups directly via
+    random.sample to avoid materialising billions of tuples.
     """
-    subsets = list(itertools.combinations(unique_authors, k))
-    if not subsets:
+    n = len(unique_authors)
+    if n < k:
         return []
 
+    pool_size = math.comb(n, k)
     rng = random.Random(seed)
-    if len(subsets) >= n_trials:
+
+    if pool_size <= n_trials:
+        subsets = list(itertools.combinations(unique_authors, k))
+        groups = list(subsets)
+        groups.extend(rng.choices(subsets, k=n_trials - len(subsets)))
+        rng.shuffle(groups)
+        return groups
+
+    if pool_size <= _ENUM_THRESHOLD:
+        subsets = list(itertools.combinations(unique_authors, k))
         return rng.sample(subsets, n_trials)
 
-    groups = list(subsets)
-    groups.extend(rng.choices(subsets, k=n_trials - len(subsets)))
-    rng.shuffle(groups)
+    # Large pool: sample directly; collision probability ≈ n_trials²/(2·pool_size) ≈ 0
+    seen: set[tuple[str, ...]] = set()
+    groups: list[tuple[str, ...]] = []
+    while len(groups) < n_trials:
+        group = tuple(sorted(rng.sample(unique_authors, k)))
+        if group not in seen:
+            seen.add(group)
+            groups.append(group)
     return groups
 
 
@@ -171,15 +184,13 @@ def _print_summary(results: dict[int, list[float]], k_values: list[int]) -> None
 
 def main() -> None:
     print("Loading cleaned corpus …")
-    corpus = load_corpus("lesswrong_regular", cleaned_dir="cleaned_10")
+    corpus = load_corpus("lesswrong_large", cleaned_dir="cleaned_25")
     corpus = (
         corpus.filter(min_words=MIN_WORDS)
-              .balance_per_author_era(n_per_era=N_PER_ERA, seed=GLOBAL_SEED)
               .equal_length_truncate(floor=MIN_WORDS)
     )
     print(f"  {len(corpus)} docs × {corpus.truncated_to}w  "
-          f"({len(set(corpus.authors))} authors, "
-          f"{N_PER_ERA}/era per author)")
+          f"({len(set(corpus.authors))} authors)")
 
     print("\nBuilding stylometric feature matrix …")
     X, _ = build_feature_matrix(
@@ -211,7 +222,7 @@ def main() -> None:
         results, FIG_PATH,
         title=(
             f"K-means — Effects of No. of Authors (K)  "
-            f"(Lesswrong 10 Authors, articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
+            f"(Lesswrong 25 Authors, articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
         ),
     )
     print(f"\nSaved -> {FIG_PATH.relative_to(_PROJECT_ROOT)}")
