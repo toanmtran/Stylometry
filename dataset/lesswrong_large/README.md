@@ -9,7 +9,7 @@ INFORMATION ABOUT THE LESSWRONG_LARGE DATA SET
 
 The cleaning process involves:
 
-* Run scripts\clean_lesswrong_regular.py
+* Run scripts\clean_lesswrong_large.py
 * Surgically remove outliners and noisy articles using Claude
     Prompt: Please go through the [name] dataset (let's do 10 authors at a time) and surgically remove all articles that are interviews, talks, audio transcripts, articles written by multiple authors, articles where the supposed author is not an author but just a supervisor/adviser, articles with too much noisy content (code, quotes, dense math formulas) that would affect stylometry analysis.
 * Manually refine the articles (removing tags, headers, etc.)
