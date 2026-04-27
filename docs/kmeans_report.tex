@@ -369,8 +369,8 @@ the effort.
 \end{figure}
 
 The pattern closely mirrors the 10-author case: mean ARI climbs from $0.35$
-to $\sim 0.48$ as $M$ goes from 5 to 30, then \textbf{flattens} between
-$M=30$ and $M=40$, hovering at $0.46$--$0.48$. On this kind of LessWrong corpus, collecting more than roughly
+to $0.47$ as $M$ goes from 5 to 25, then \textbf{flattens} between
+$M=25$ and $M=40$, hovering at $0.46$--$0.48$. On this kind of LessWrong corpus, collecting more than roughly
 30 articles per author appears to yield little extra clustering quality.
 
 % =============================================================================
@@ -405,7 +405,7 @@ $0.60$ at $K=2$ to $0.40$ at $K=10$.
 How does article length $N$ affect performance? Most of our 107 features are
 proportions, frequencies, means: quantities that should be
 agnostic to length in expectation, yet noisier when estimated from short
-passages.
+passages. We therefore expect ARI to rise with $N$.
 
 \paragraph{Setup.}
 We use \textit{LessWrong 10 Authors} with $K=5$ and $M=15$, sweeping
@@ -477,7 +477,7 @@ and track two features as a function of passage length:
   \item Concatenate all of \code{zvi}'s articles into a single ``master''
         document.
   \item For each window size $N \in \{100, 200, 500, 1000, 1500, 2000, 2500,
-        3000\}$, draw 20 random contiguous slices of exactly $N$ tokens.
+        3000\}$, draw 20 random contiguous slices of exactly $N$ words.
   \item Compute \code{fw\_you} (rate of the word ``you'') and
         \code{word\_len\_1\_frac} (rate of one-character words) on each
         slice.
@@ -510,8 +510,7 @@ the pre-2022 era}.
 \paragraph{Setup.}
 LessWrong 10 Authors, $K=4$, $M=10$, $N=1{,}526$, 50 trials per era. Each
 trial samples 4 of the 10 authors and 10 of each author's 20 era-restricted
-articles; the rest of the pipeline is unchanged. The two eras are sampled
-independently, making their error bars statistically comparable.
+articles; the rest of the pipeline is unchanged.
 
 \begin{figure}[H]
   \centering
