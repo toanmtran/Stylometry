@@ -2,7 +2,7 @@ INFORMATION ABOUT THE LESSWRONG_LARGE DATA SET
 
 1. \raw: The raw data collected from lesswrong, containing data for 40 authors, each satisfying:
 
-* at least 30 articles  ≥ 2024
+* at least 30 articles
 * Nominal length (pre-processing) of at least 1500 words
 
 2. \cleaned: The cleaned data for those authors from \raw
