@@ -1,0 +1,64 @@
+model:
+  type: MLP                         # Multi-Layer Perceptron (fully connected feedforward)
+  task: multiclass_classification
+  num_classes: 5                    # Eliezer Yudkowsky, Johnswentworth, Raemon, Scottalexander, Zvi
+
+architecture:
+  # Tested configurations (units per hidden layer)
+  depth_1:  [64]
+  depth_2:  [64, 32]
+  depth_3:  [64, 64, 64]
+  depth_10: [64, 64, 64, 64, 64, 64, 64, 64, 64, 64]
+  depth_50: null                    # 50 identical hidden layers — collapses during training
+  recommended: depth_1              # Best test accuracy across all feature subsets
+
+  hidden_activation: relu
+  output_activation: softmax        # Produces class probability distribution
+
+initialization:
+  method: xavier_uniform            # Xavier / Glorot uniform: var = 2 / (fan_in + fan_out)
+  bias: zeros
+
+optimizer:
+  name: adam            
+  # Adan default hyperparameters
+  lr: 1.0e-3
+  betas: [0.02, 0.08, 0.01]        # β1 (grad EMA), β2 (diff EMA), β3 (sq diff EMA)
+  eps: 1.0e-8
+  weight_decay: 0.02
+
+loss:
+  function: cross_entropy           # Categorical cross-entropy with softmax logits
+
+regularization:
+  early_stopping:
+    enabled: true/false                   # See with_early_stopping.md for impact
+    patience: 10                    # Epochs without val-loss improvement before halt
+    monitor: val_loss
+    restore_best_weights: true
+
+training:
+  cv_folds: 5                       # Stratified k-fold cross-validation
+  epochs: 200
+  batch_size: 32
+
+features:
+  total_available: 107
+  evaluated_subsets: [15, 30, 50, 74, 107]
+  recommended_subset: 74            # Best generalisation; full 107 offers marginal gain
+  # Feature categories
+  categories:
+    - lexical_richness               # hapax_ratio, yule_k, simpson_d, brunet_w, honore_r
+    - word_length_stats              # avg_word_len, std_word_len, word_len_*_frac
+    - sentence_stats                 # avg_sent_len, std_sent_len, max_sent_len, min_sent_len
+    - function_words                 # fw_the, fw_be, fw_to, ... (top-50 English function words)
+    - punctuation_rates              # comma, period, semicolon, colon, excl, question, dash, paren
+    - categorical_rates              # hedge, amplifier, discourse marker, conjunction rates
+    - pos_tags                       # noun, verb, adj, adv, pron, det, prep, conj, modal fractions
+    - surface_features               # uppercase_ratio, contraction_rate, pronoun_start_rate
+    - character_rates                # char_a_rate through char_u_rate (vowel frequencies)
+  preprocessing:
+    scaling: standard_scaler        # Zero mean, unit variance per feature
+    outlier_removal:
+      enabled: true                 # See Results_without_outlier.md — improves accuracy ~1–2%
+      method: Isolation forest    # Interquartile range per author per feature
