@@ -1,3 +1,18 @@
+"""
+MLP Authorship Classifier — Dev/Test Evaluation
+
+Workflow (run independently for each case):
+  1. Split data 60 / 20 / 20  (train / dev / test), stratified by author.
+  2. Train every (feature-subset × depth) combination on the train split.
+  3. Select the best combination by dev accuracy.
+  4. Retrain the winner on train+dev.
+  5. Evaluate on the held-out test split (touched once per case).
+
+Cases:
+  - With outliers    → uses author_features_extracted_full.csv as-is
+  - Without outliers → applies per-author Isolation Forest before splitting
+"""
+
 import argparse
 import os
 
@@ -5,7 +20,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
@@ -30,35 +45,31 @@ FEATURE_RANKING = [
     "fw_have", "avg_sent_len", "fw_out",
 ]
 
-NETWORK_CONFIGS = {
-    "Depth 1 (64,)":     (64,),
-    "Depth 2 (64, 32)":  (64, 32),
-    "Depth 3 (64, 64, 64)": (64, 64, 64),
-    "Depth 10":          tuple([64] * 10),
-    "Depth 50":          tuple([64] * 50),
+NETWORK_CONFIGS: dict[str, tuple[int, ...]] = {
+    "Depth 1 (64,)":      (64,),
+    "Depth 2 (64, 32)":   (64, 32),
+    "Depth 3 (64,64,64)": (64, 64, 64),
+    "Depth 10":           tuple([64] * 10),
+    "Depth 50":           tuple([64] * 50),
 }
 
-FEATURE_SUBSETS = [15, 30, 50, 74]   # top-k; 74 = full ranked set
+FEATURE_SUBSETS = [15, 30, 50, 74]   # top-k from FEATURE_RANKING; 74 = full ranked set
 METADATA_COLS   = {"author", "passage_id"}
 
+TRAIN_RATIO  = 0.60   # of total
+DEV_RATIO    = 0.20   # of total  → test_size=0.25 of the 80% traindev pool
+TEST_RATIO   = 0.20   # of total
+RANDOM_STATE = 42
+
 
 # ==========================================
-# HELPERS
+# DATA HELPERS
 # ==========================================
-def load_data(csv_path: str) -> tuple[pd.DataFrame, np.ndarray, np.ndarray, LabelEncoder]:
-    df = pd.read_csv(csv_path)
-    feature_cols = [c for c in df.columns if c not in METADATA_COLS]
-    X = df[feature_cols].values
-    le = LabelEncoder()
-    y = le.fit_transform(df["author"])
-    return df, X, y, le
-
-
 def remove_outliers(df: pd.DataFrame) -> pd.DataFrame:
     feature_cols = [c for c in df.columns if c not in METADATA_COLS]
     kept = []
     for _, group in df.groupby("author"):
-        clf = IsolationForest(contamination="auto", random_state=42)
+        clf = IsolationForest(contamination="auto", random_state=RANDOM_STATE)
         mask = clf.fit_predict(group[feature_cols].values) == 1
         kept.append(group[mask])
     return pd.concat(kept).reset_index(drop=True)
@@ -69,74 +80,143 @@ def get_ordered_features(df: pd.DataFrame) -> list[str]:
     return [f for f in FEATURE_RANKING if f in available]
 
 
-def evaluate(
-    df: pd.DataFrame,
-    ordered_features: list[str],
-    early_stopping: bool,
-) -> str:
-    all_feature_cols = [c for c in df.columns if c not in METADATA_COLS]
+def make_eval_tasks(
+    df: pd.DataFrame, ordered: list[str]
+) -> list[tuple[str, list[str]]]:
+    """Return (label, column_list) pairs for each feature subset."""
+    all_cols = [c for c in df.columns if c not in METADATA_COLS]
+    tasks = [(f"Top {k} features", ordered[:k]) for k in FEATURE_SUBSETS]
+    tasks.append((f"All {len(all_cols)} features", all_cols))
+    return tasks
+
+
+# ==========================================
+# EXPERIMENT
+# ==========================================
+def run_experiment(df: pd.DataFrame, case_label: str, early_stopping: bool) -> str:
     le = LabelEncoder()
-    y = le.fit_transform(df["author"])
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    y  = le.fit_transform(df["author"])
+    ordered = get_ordered_features(df)
+    tasks   = make_eval_tasks(df, ordered)
 
-    eval_tasks: list[tuple[str, np.ndarray]] = []
-    for k in FEATURE_SUBSETS:
-        cols = ordered_features[:k]
-        eval_tasks.append((f"EVALUATING TOP {len(cols)} FEATURES", df[cols].values))
-    eval_tasks.append((f"EVALUATING ALL {len(all_feature_cols)} FEATURES", df[all_feature_cols].values))
+    # ── 60 / 20 / 20 stratified split ──────────────────────────────────────
+    idx = np.arange(len(df))
+    idx_traindev, idx_test, y_traindev, y_test = train_test_split(
+        idx, y, test_size=TEST_RATIO, stratify=y, random_state=RANDOM_STATE
+    )
+    idx_train, idx_dev, y_train, y_dev = train_test_split(
+        idx_traindev, y_traindev,
+        test_size=DEV_RATIO / (TRAIN_RATIO + DEV_RATIO),   # 0.25 of 80% = 20%
+        stratify=y_traindev, random_state=RANDOM_STATE,
+    )
 
-    md = "# MLP Classifier Evaluation Results (Subsets & Full Features)\n\n"
+    n_total    = len(df)
+    n_train    = len(idx_train)
+    n_dev      = len(idx_dev)
+    n_test     = len(idx_test)
+    n_traindev = len(idx_traindev)
 
-    for header, X_raw in eval_tasks:
-        print(f"\n{'='*50}\n{header}\n{'='*50}")
-        md += f"## {header}\n\n"
+    print(f"\n{'='*60}")
+    print(f"  {case_label}")
+    print(f"  Total={n_total}  Train={n_train}  Dev={n_dev}  Test={n_test}")
+    print(f"{'='*60}")
 
-        for label, config in NETWORK_CONFIGS.items():
-            print(f"\n--- 5-Fold CV: {label} ---")
-            md += f"### 5-Fold CV: {label}\n\n"
+    # ── Dev-set model selection ─────────────────────────────────────────────
+    selection_rows: list[dict] = []
 
-            fold_reports, train_accs, test_accs = [], [], []
+    for subset_label, cols in tasks:
+        X_all_sub = df[cols].values
+        scaler    = StandardScaler()
+        X_train_s = scaler.fit_transform(X_all_sub[idx_train])
+        X_dev_s   = scaler.transform(X_all_sub[idx_dev])
 
-            for train_idx, test_idx in skf.split(X_raw, y):
-                # Fit scaler on train only — no data leakage
-                scaler = StandardScaler()
-                X_train = scaler.fit_transform(X_raw[train_idx])
-                X_test  = scaler.transform(X_raw[test_idx])
+        for cfg_label, cfg in NETWORK_CONFIGS.items():
+            print(f"  [DEV]  {subset_label:20s}  {cfg_label}")
+            clf = MLPClassifier(
+                hidden_layer_sizes=cfg,
+                max_iter=1000,
+                random_state=RANDOM_STATE,
+                solver="adam",
+                early_stopping=early_stopping,
+            )
+            clf.fit(X_train_s, y_train)
 
-                clf = MLPClassifier(
-                    hidden_layer_sizes=config,
-                    max_iter=1000,
-                    random_state=42,
-                    solver="adam",
-                    early_stopping=early_stopping,
-                )
-                clf.fit(X_train, y[train_idx])
+            selection_rows.append({
+                "subset_label": subset_label,
+                "cols":         cols,
+                "cfg_label":    cfg_label,
+                "cfg":          cfg,
+                "train_acc":    clf.score(X_train_s, y_train),
+                "dev_acc":      clf.score(X_dev_s,   y_dev),
+            })
 
-                train_accs.append(clf.score(X_train, y[train_idx]))
-                test_accs.append(clf.score(X_test,  y[test_idx]))
+    # Sort by dev accuracy descending
+    selection_rows.sort(key=lambda r: r["dev_acc"], reverse=True)
+    best = selection_rows[0]
 
-                report = classification_report(
-                    y[test_idx],
-                    clf.predict(X_test),
-                    target_names=le.classes_,
-                    output_dict=True,
-                    zero_division=0,
-                )
-                fold_reports.append(pd.DataFrame(report).T)
+    print(f"\n  Best on dev: {best['subset_label']} | {best['cfg_label']}"
+          f"  (dev={best['dev_acc']:.4f})")
 
-            mean_train = np.mean(train_accs)
-            mean_test  = np.mean(test_accs)
-            print(f"  Mean Training Accuracy: {mean_train:.4f}")
-            print(f"  Mean Testing Accuracy:  {mean_test:.4f}")
+    # ── Retrain winner on train+dev, evaluate on test ───────────────────────
+    print(f"  Retraining on train+dev ({n_traindev} passages)...")
+    X_best_sub  = df[best["cols"]].values
+    scaler_final = StandardScaler()
+    X_traindev_s = scaler_final.fit_transform(X_best_sub[idx_traindev])
+    X_test_s     = scaler_final.transform(X_best_sub[idx_test])
 
-            md += f"- **Mean Training Accuracy:** {mean_train:.4f}\n"
-            md += f"- **Mean Testing Accuracy:** {mean_test:.4f}\n\n"
+    final_clf = MLPClassifier(
+        hidden_layer_sizes=best["cfg"],
+        max_iter=1000,
+        random_state=RANDOM_STATE,
+        solver="adam",
+        early_stopping=early_stopping,
+    )
+    final_clf.fit(X_traindev_s, y_traindev)
+    test_acc = final_clf.score(X_test_s, y_test)
 
-            avg_stats    = pd.concat(fold_reports).groupby(level=0).mean()
-            display_rows = list(le.classes_) + ["macro avg", "weighted avg"]
-            table        = avg_stats.loc[display_rows]
-            print(table.to_string())
-            md += table.to_markdown() + "\n\n"
+    test_report = classification_report(
+        y_test,
+        final_clf.predict(X_test_s),
+        target_names=le.classes_,
+        output_dict=True,
+        zero_division=0,
+    )
+    test_df = pd.DataFrame(test_report).T
+    display_rows = list(le.classes_) + ["macro avg", "weighted avg"]
+    test_table = test_df.loc[display_rows]
+
+    print(f"  Test accuracy: {test_acc:.4f}")
+    print(test_table.to_string())
+
+    # ── Build markdown ──────────────────────────────────────────────────────
+    md  = f"# MLP Authorship Classification — {case_label}\n\n"
+
+    md += "## Data Split\n\n"
+    md += "| Set | Passages | Proportion |\n"
+    md += "|-----|----------|------------|\n"
+    md += f"| Train     | {n_train}    | {n_train/n_total:.0%} |\n"
+    md += f"| Dev       | {n_dev}      | {n_dev/n_total:.0%}   |\n"
+    md += f"| Test      | {n_test}     | {n_test/n_total:.0%}  |\n"
+    md += f"| **Total** | **{n_total}**| 100%      |\n\n"
+
+    md += "## Dev Set — Model Selection\n\n"
+    md += ("All feature-subset × architecture combinations ranked by dev accuracy. "
+           "Best configuration is retrained on train+dev and evaluated on the test set.\n\n")
+    md += "| Rank | Feature Subset | Architecture | Train Acc | Dev Acc |\n"
+    md += "|------|----------------|-------------|-----------|----------|\n"
+    for i, row in enumerate(selection_rows, 1):
+        marker = " ✓" if i == 1 else ""
+        md += (f"| {i} | {row['subset_label']} | {row['cfg_label']} "
+               f"| {row['train_acc']:.4f} | {row['dev_acc']:.4f}{marker} |\n")
+
+    md += f"\n**Best model:** {best['subset_label']} · {best['cfg_label']}"
+    md += f" — Dev accuracy: **{best['dev_acc']:.4f}**\n\n"
+
+    md += "## Final Test Set Results\n\n"
+    md += (f"Retrained on train+dev ({n_traindev} passages) using "
+           f"**{best['subset_label']}**, **{best['cfg_label']}**.\n\n")
+    md += f"**Test Accuracy: {test_acc:.4f}**\n\n"
+    md += test_table.to_markdown() + "\n"
 
     return md
 
@@ -145,16 +225,12 @@ def evaluate(
 # MAIN
 # ==========================================
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train & evaluate MLP stylometric classifier")
-    parser.add_argument("--input",  default="author_features_extracted_full.csv",
-                        help="Input CSV file (default: author_features_extracted_full.csv)")
-    parser.add_argument("--output", default="evaluation_results_full_and_subsets.md",
-                        help="Output markdown file (default: evaluation_results_full_and_subsets.md)")
-    parser.add_argument("--remove-outliers", action="store_true",
-                        help="Remove outliers with Isolation Forest before training")
-    parser.add_argument("--early-stopping", action="store_true",
-                        help="Enable early stopping during MLP training")
-    return parser.parse_args()
+    p = argparse.ArgumentParser(description="MLP authorship classifier — dev/test evaluation")
+    p.add_argument("--input",  default="author_features_extracted_full.csv",
+                   help="Full feature CSV (default: author_features_extracted_full.csv)")
+    p.add_argument("--early-stopping", action="store_true",
+                   help="Enable early stopping during MLP training")
+    return p.parse_args()
 
 
 def main() -> None:
@@ -164,20 +240,23 @@ def main() -> None:
         raise FileNotFoundError(f"Input file not found: {args.input}")
 
     print(f"Loading {args.input}...")
-    df = pd.read_csv(args.input)
-    print(f"  {len(df)} rows, {len(df.columns)} columns")
+    df_full = pd.read_csv(args.input)
+    print(f"  {len(df_full)} rows loaded")
 
-    if args.remove_outliers:
-        before = len(df)
-        df = remove_outliers(df)
-        print(f"  Outlier removal: {before} → {len(df)} rows")
+    print("\nRemoving outliers for second case...")
+    df_clean = remove_outliers(df_full)
+    print(f"  {len(df_full)} -> {len(df_clean)} rows after outlier removal")
 
-    ordered_features = get_ordered_features(df)
-    md = evaluate(df, ordered_features, early_stopping=args.early_stopping)
+    cases = [
+        (df_full,  "With Outliers",    "results_with_outliers.md"),
+        (df_clean, "Without Outliers", "results_without_outliers.md"),
+    ]
 
-    with open(args.output, "w", encoding="utf-8") as f:
-        f.write(md)
-    print(f"\nResults saved to '{args.output}'")
+    for df, label, outfile in cases:
+        md = run_experiment(df, label, early_stopping=args.early_stopping)
+        with open(outfile, "w", encoding="utf-8") as f:
+            f.write(md)
+        print(f"\nSaved: {outfile}")
 
 
 if __name__ == "__main__":
