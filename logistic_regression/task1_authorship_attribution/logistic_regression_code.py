@@ -23,9 +23,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # ── paths ──────────────────────────────────────────────────────────────────
 _HERE     = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR  = os.path.join(_HERE, "..", "neural_network")
-FULL_CSV  = os.path.join(DATA_DIR, "author_features_extracted_full.csv")
-CLEAN_CSV = os.path.join(DATA_DIR, "feature_extracted_without_outliers.csv")
+DATA_DIR  = _HERE
+FULL_CSV = os.path.join(DATA_DIR, "features_25authors.csv")
 
 # ── configuration ──────────────────────────────────────────────────────────
 METADATA_COLS = {"author", "passage_id"}
@@ -115,7 +114,6 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
         base_clf = LogisticRegression(
             random_state=RANDOM_STATE,
             n_jobs=-1,
-            multi_class="multinomial",
         )
         gs = GridSearchCV(
             base_clf, PARAM_GRID,
@@ -172,7 +170,6 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
         LogisticRegression(
             random_state=RANDOM_STATE,
             n_jobs=-1,
-            multi_class="multinomial",
         ),
         PARAM_GRID,
         cv=inner_cv, scoring="accuracy",
@@ -259,13 +256,9 @@ def main() -> None:
     df_full = pd.read_csv(FULL_CSV)
     print(f"  Full dataset: {len(df_full)} rows")
 
-    if os.path.exists(CLEAN_CSV):
-        df_clean = pd.read_csv(CLEAN_CSV)
-        print(f"  Clean dataset: {len(df_clean)} rows (loaded from file)")
-    else:
-        print("  Clean CSV not found — computing outlier removal...")
-        df_clean = remove_outliers(df_full)
-        print(f"  Clean dataset: {len(df_clean)} rows")
+    print("  Computing outlier removal...")
+    df_clean = remove_outliers(df_full)
+    print(f"  Clean dataset: {len(df_clean)} rows")
 
     cases = [
         (df_full,  "With Outliers",    "results_with_outliers.md"),
