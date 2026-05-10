@@ -3,18 +3,13 @@ Authorship Verification — Binary Classification via Pairwise Features
 
 Given two texts, determine whether they were written by the same author.
 
-Approach (follows SVM/data_prepare.py):
+Approach:
   1. Load feature CSV with author labels
   2. Generate positive pairs (same author, different passages) and
      negative pairs (different authors)
   3. For each pair, compute: [abs_diff, sq_diff, mult_feat] = 3 * n_features
-  4. Train binary classifier: 1 = same author, 0 = different authors
+  4. Train Logistic Regression binary classifier: 1 = same author, 0 = different authors
   5. Use GroupKFold to prevent author-level data leakage
-
-Models:
-  - Logistic Regression (fast, interpretable)
-  - SVM (RBF kernel, baseline from SVM/)
-  - Random Forest (comparison)
 
 Usage:
     python logistic_regression_verification.py
@@ -28,24 +23,18 @@ import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GroupKFold, cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
-    accuracy_score, classification_report, confusion_matrix,
-    roc_auc_score, roc_curve, f1_score, precision_score, recall_score,
+    accuracy_score, confusion_matrix,
+    roc_auc_score, f1_score, precision_score, recall_score,
 )
-
-import matplotlib.pyplot as plt
 
 
 # ── paths ──────────────────────────────────────────────────────────────────
 _HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT  = os.path.join(_HERE, "..")
+ROOT  = os.path.join(_HERE, "..", "..")
 
-FULL_CSV   = os.path.join(ROOT, "neural_network", "author_features_extracted_full.csv")
-CLEAN_CSV  = os.path.join(ROOT, "neural_network", "feature_extracted_without_outliers.csv")
 LARGE_CSV  = os.path.join(ROOT, "SVM", "LesswrongLarge.csv")  # 35 authors
 
 # ── configuration ──────────────────────────────────────────────────────────
@@ -143,20 +132,15 @@ def generate_pairs(
 def run_verification(
     df: pd.DataFrame,
     case_label: str,
-    model_type: str = "lr",
 ) -> dict:
-    """
-    Run authorship verification with given model.
-
-    Model types: 'lr' (Logistic Regression), 'svm', 'rf' (Random Forest)
-    """
+    """Run authorship verification with Logistic Regression."""
     feature_cols = [c for c in df.columns if c not in METADATA_COLS]
     X_feat = df[feature_cols].values
     authors = df["author"].values
     unique_authors = sorted(set(authors))
 
     print(f"\n{'='*62}")
-    print(f"  Authorship Verification | {case_label} | Model: {model_type}")
+    print(f"  Authorship Verification | {case_label} | Model: Logistic Regression")
     print(f"  {len(df)} passages | {len(feature_cols)} features | {len(unique_authors)} authors")
     print(f"{'='*62}")
 
@@ -199,15 +183,7 @@ def run_verification(
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # Select model
-    if model_type == "lr":
-        model = LogisticRegression(C=1.0, max_iter=1000, random_state=RANDOM_STATE, n_jobs=-1)
-    elif model_type == "svm":
-        model = SVC(kernel="rbf", C=1.0, gamma="scale", random_state=RANDOM_STATE, probability=True)
-    elif model_type == "rf":
-        model = RandomForestClassifier(n_estimators=200, random_state=RANDOM_STATE, n_jobs=-1)
-    else:
-        raise ValueError(f"Unknown model type: {model_type}")
+    model = LogisticRegression(C=1.0, max_iter=1000, random_state=RANDOM_STATE, n_jobs=-1)
 
     # Cross-validation with GroupKFold
     n_groups = len(set(groups_train))
@@ -248,7 +224,7 @@ def run_verification(
 
     return {
         "case": case_label,
-        "model": model_type,
+        "model": "Logistic Regression",
         "n_passages": len(df),
         "n_authors": len(unique_authors),
         "cv_accuracy_mean": cv_scores.mean(),
@@ -263,45 +239,20 @@ def run_verification(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Authorship Verification Experiments")
-    parser.add_argument("--models", nargs="+", default=["lr", "svm", "rf"],
-                        help="Models to run (lr, svm, rf)")
+    parser = argparse.ArgumentParser(description="Authorship Verification — Logistic Regression")
     parser.add_argument("--output", default="verification_results.md",
                         help="Output markdown file")
     args = parser.parse_args()
 
     all_results = []
 
-    # ── Case 1: 5 authors from neural_network/ ──────────────────────────
-
+    # ── 35 Authors (LesswrongLarge.csv) — Logistic Regression ───────────
     print("\n" + "=" * 62)
-    print("  CASE 1: 5 Authors (neural_network/ features)")
-
+    print("  CASE: 35 Authors (LesswrongLarge.csv) — Logistic Regression")
     print("=" * 62)
-    df_5 = load_data(FULL_CSV)
-    for model in args.models:
-        r = run_verification(df_5, f"5 Authors", model_type=model)
-        all_results.append(r)
-
-    # ── Case 2: 5 authors without outliers ──────────────────────────────
-    if os.path.exists(CLEAN_CSV):
-
-        print("\n" + "=" * 62)
-        print("  CASE 2: 5 Authors (without outliers)")
-
-        print("=" * 62)
-        df_clean = load_data(CLEAN_CSV)
-        for model in args.models:
-            r = run_verification(df_clean, f"5 Authors (no outliers)", model_type=model)
-            all_results.append(r)
-        print("\n" + "=" * 62)
-        print("  CASE 3: 35 Authors (LesswrongLarge.csv)")
-        print("=" * 62)
-        df_35 = load_data(LARGE_CSV)
-        # Only run LR for 35 authors (fast)
-        if "lr" in args.models:
-            r = run_verification(df_35, f"35 Authors", model_type="lr")
-            all_results.append(r)
+    df_35 = load_data(LARGE_CSV)
+    r = run_verification(df_35, "35 Authors")
+    all_results.append(r)
 
     # ── Write report ────────────────────────────────────────────────────
     print(f"\nSaving report to {args.output}...")

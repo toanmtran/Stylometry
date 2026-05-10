@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 # Add src to path so we can import features & preprocess
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from src.features import extract_features
 from src.preprocess import (
