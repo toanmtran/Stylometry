@@ -8,6 +8,7 @@ Thu muc nay chua cac thuc nghiem **Logistic Regression** cho cac bai toan stylom
 
 ```
 logistic_regression/
+|-- _config.py                                              # Shared config, constants, helpers
 |-- read_me.md                                             # Huong dan su dung
 |
 |-- task1_authorship_attribution/                          # Task 1: Authorship Attribution
@@ -171,10 +172,12 @@ python ai_detection_lr.py --file input.txt
 | Task | Dataset | Metric | Gia tri |
 |------|---------|--------|---------|
 | Attribution (co outliers) | 25 auth, 868 passages | Accuracy | 73.26% |
-| Attribution (khong outliers) | 25 auth, 783 passages | Accuracy | 75.10% |
-| Verification (35 auth) | 1484 passages | AUC | 0.7748 |
+| Attribution (khong outliers) | 25 auth, ~783 passages | Accuracy | 70.73% |
+| Verification (35 auth) | 1484 passages | AUC | 0.7759 |
+| AI Detection | 10 auth, 666 passages | Accuracy | 65.67% |
+| AI Detection | 10 auth, 666 passages | AUC | 0.7420 |
 
-> **Luu y:** Ket qua Attribution hien tai o muc ~73% cho 25 authors. Voi 5 authors, accuracy dat 93-96% (xem ket qua trong neural_network/README.md).
+> **Luu y:** Ket qua da duoc cap nhat sau khi fix data leakage (Scaler + IsolationForest chi fit tren training fold). Truoc khi fix, ket qua "khong outliers" bi thoi phong len 75.10%. Cac model Verification va AI Detection hien co hyperparameter tuning (GridSearchCV).
 
 ---
 
@@ -185,4 +188,5 @@ python ai_detection_lr.py --file input.txt
 - File demo se retrain model moi moi lan chay (khong dung model pkl san)
 - Cac model khac (Random Forest, XGBoost, Neural Network, SVM) nam o thu muc rieng
 - Task 2 chi dung Logistic Regression (khong con SVM, RF)
+- **2026-05-23:** Da fix data leakage (Scaler + IsolationForest fit trong CV fold), them hyperparameter tuning cho Verification + AI Detection, tao `_config.py` shared module
 """
