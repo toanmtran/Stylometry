@@ -9,10 +9,13 @@ Approach:
      negative pairs (different authors)
   3. For each pair, compute: [abs_diff, sq_diff, mult_feat] = 3 * n_features
   4. Train Logistic Regression binary classifier: 1 = same author, 0 = different authors
-  5. Use GroupKFold to prevent author-level data leakage
+  5. Evaluate on held-out test AUTHORS (not passages) for honest generalisation
 
-Usage:
-    python logistic_regression_verification.py
+NOTE — Negative-pair groups:
+  A negative pair involves TWO authors. GroupKFold cannot track both, so we
+  split authors into train/test FIRST, and use StratifiedKFold for CV within
+  the training set. The final held-out test set contains only unseen authors
+  —no author appears in both train and test.
 """
 import argparse
 import os
@@ -23,30 +26,32 @@ import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GroupKFold, cross_val_score, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV, StratifiedKFold, cross_val_score, train_test_split,
+)
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     accuracy_score, confusion_matrix,
     roc_auc_score, f1_score, precision_score, recall_score,
 )
 
-
-# ── paths ──────────────────────────────────────────────────────────────────
+# ── bootstrap project path ─────────────────────────────────────────────────────
 _HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT  = os.path.join(_HERE, "..", "..")
+_PARENT = os.path.dirname(_HERE)
+if _PARENT not in __import__("sys").path:
+    __import__("sys").path.insert(0, _PARENT)
 
-LARGE_CSV  = os.path.join(ROOT, "SVM", "LesswrongLarge.csv")  # 35 authors
+from _config import RANDOM_STATE, generate_pair_features, PARAM_GRID_LR_SIMPLE
+from _config import LESSWRONG_LARGE as LARGE_CSV
 
-# ── configuration ──────────────────────────────────────────────────────────
+# ── configuration ──────────────────────────────────────────────────────────────
 METADATA_COLS = {"author", "passage_id", "_label"}
-RANDOM_STATE  = 42
-MAX_PAIRS_PER_AUTHOR = 500  # Limit to prevent class imbalance from exploding
+MAX_PAIRS_PER_AUTHOR = 500
 
 
 def load_data(csv_path: str) -> pd.DataFrame:
-    """Load feature CSV."""
+    """Load feature CSV and normalise author names."""
     df = pd.read_csv(csv_path)
-    # Normalize author names
     df["author"] = df["author"].str.strip().str.lower()
     print(f"  Loaded {len(df)} passages, {df['author'].nunique()} authors")
     return df
@@ -57,28 +62,18 @@ def generate_pairs(
     authors: np.ndarray,
     selected_authors: list[str],
     max_pairs_per_auth: int = MAX_PAIRS_PER_AUTHOR,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Generate positive and negative pairs.
+    Generate balanced positive and negative pairs.
 
-    Positive: same author, different passages
-    Negative: different authors, one passage each
+    Pair feature = concat(abs_diff, sq_diff, mult) → 3 * n_features.
 
-    Pair feature vector = concatenation of:
-      abs_diff(A, B), sq_diff(A, B), mult(A, B)
-
-    Returns:
-        X: (n_pairs, 3 * n_features) array
-        y: (n_pairs,) labels (1 = same, 0 = different)
-        groups: (n_pairs,) author IDs for GroupKFold
+    Returns X (pair features) and y (1 = same author, 0 = different).
     """
-    author_to_id = {auth: idx for idx, auth in enumerate(selected_authors)}
-    n_features = features.shape[1]
+    pos_pairs = []
+    neg_pairs = []
 
-    pos_pairs, pos_groups = [], []
-    neg_pairs, neg_groups = [], []
-
-    # 1. Positive pairs: same author
+    # 1. Positive pairs: same author, different passages
     for auth in selected_authors:
         idx = np.where(authors == auth)[0]
         if len(idx) < 2:
@@ -89,51 +84,29 @@ def generate_pairs(
             all_combos = random.sample(all_combos, max_pairs_per_auth)
 
         for i, j in all_combos:
-            f1, f2 = features[i], features[j]
-            combined = np.concatenate([
-                np.abs(f1 - f2),
-                (f1 - f2) ** 2,
-                f1 * f2,
-            ])
-            pos_pairs.append(combined)
-            pos_groups.append(author_to_id[auth])
+            pos_pairs.append(generate_pair_features(features[i], features[j]))
 
-    # 2. Negative pairs: different authors (same count as positives)
+    # 2. Negative pairs: different authors (match positive count)
     num_pos = len(pos_pairs)
     selected_list = list(selected_authors)
 
     if len(selected_list) >= 2:
         for _ in range(num_pos):
             a1, a2 = random.sample(selected_list, 2)
-            idx1 = random.choice(np.where(authors == a1)[0])
-            idx2 = random.choice(np.where(authors == a2)[0])
-
-            f1, f2 = features[idx1], features[idx2]
-            combined = np.concatenate([
-                np.abs(f1 - f2),
-                (f1 - f2) ** 2,
-                f1 * f2,
-            ])
-            neg_pairs.append(combined)
-            neg_groups.append(author_to_id[a1])
+            i = random.choice(np.where(authors == a1)[0])
+            j = random.choice(np.where(authors == a2)[0])
+            neg_pairs.append(generate_pair_features(features[i], features[j]))
 
     if len(neg_pairs) == 0:
-        X = np.array(pos_pairs)
-        y = np.ones(num_pos)
-        groups = np.array(pos_groups)
-    else:
-        X = np.vstack((pos_pairs, neg_pairs))
-        y = np.concatenate([np.ones(num_pos), np.zeros(len(neg_pairs))])
-        groups = np.array(pos_groups + neg_groups)
+        return np.array(pos_pairs), np.ones(num_pos)
 
-    return X, y, groups
+    X = np.vstack((pos_pairs, neg_pairs))
+    y = np.concatenate([np.ones(num_pos), np.zeros(len(neg_pairs))])
+    return X, y
 
 
-def run_verification(
-    df: pd.DataFrame,
-    case_label: str,
-) -> dict:
-    """Run authorship verification with Logistic Regression."""
+def run_verification(df: pd.DataFrame, case_label: str) -> dict:
+    """Run authorship verification with Logistic Regression + hyperparameter tuning."""
     feature_cols = [c for c in df.columns if c not in METADATA_COLS]
     X_feat = df[feature_cols].values
     authors = df["author"].values
@@ -144,33 +117,27 @@ def run_verification(
     print(f"  {len(df)} passages | {len(feature_cols)} features | {len(unique_authors)} authors")
     print(f"{'='*62}")
 
-    # Split authors: 80% train, 20% test (by author, not by passage!)
+    # Split authors: 80% train, 20% test (by author, not passage!)
     random.seed(RANDOM_STATE)
     n_train = max(2, int(len(unique_authors) * 0.8))
     if n_train >= len(unique_authors):
         n_train = len(unique_authors) - 1
     train_authors, test_authors = train_test_split(
-        unique_authors, train_size=n_train,
-        random_state=RANDOM_STATE,
+        unique_authors, train_size=n_train, random_state=RANDOM_STATE,
     )
 
     train_mask = np.isin(authors, train_authors)
     test_mask = np.isin(authors, test_authors)
 
-    X_train_feat = X_feat[train_mask]
-    y_train_auth = authors[train_mask]
-    X_test_feat = X_feat[test_mask]
-    y_test_auth = authors[test_mask]
-
     print(f"  Train authors: {len(train_authors)}, Test authors: {len(test_authors)}")
 
     # Generate pairs
-    print(f"  Generating pairs...")
-    X_train, y_train, groups_train = generate_pairs(
-        X_train_feat, y_train_auth, train_authors,
+    print("  Generating pairs...")
+    X_train, y_train = generate_pairs(
+        X_feat[train_mask], authors[train_mask], train_authors,
     )
-    X_test, y_test, _ = generate_pairs(
-        X_test_feat, y_test_auth, test_authors,
+    X_test, y_test = generate_pairs(
+        X_feat[test_mask], authors[test_mask], test_authors,
     )
 
     print(f"  Train pairs: {len(y_train)} ({int(y_train.sum())} positive, "
@@ -183,31 +150,36 @@ def run_verification(
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    model = LogisticRegression(C=1.0, max_iter=1000, random_state=RANDOM_STATE, n_jobs=-1)
+    # Hyperparameter tuning via GridSearchCV
+    print("  Tuning hyperparameters via GridSearchCV (3-fold)...")
+    gs = GridSearchCV(
+        LogisticRegression(random_state=RANDOM_STATE, n_jobs=-1),
+        PARAM_GRID_LR_SIMPLE,
+        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE),
+        scoring="roc_auc", n_jobs=-1, refit=True,
+    )
+    gs.fit(X_train_scaled, y_train)
+    model = gs.best_estimator_
+    print(f"  Best params: {gs.best_params_}")
+    print(f"  CV AUC: {gs.best_score_:.4f}")
 
-    # Cross-validation with GroupKFold
-    n_groups = len(set(groups_train))
-    n_splits = min(5, n_groups)
-    print(f"  Running GroupKFold CV ({n_splits} folds, {n_groups} groups)...")
-    gkf = GroupKFold(n_splits=n_splits)
-    cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=gkf,
-                                groups=groups_train, scoring="accuracy")
+    # Cross-validation accuracy for reporting
+    cv_scores = cross_val_score(
+        model, X_train_scaled, y_train,
+        cv=StratifiedKFold(n_splits=min(5, len(set(y_train))), shuffle=True, random_state=RANDOM_STATE),
+        scoring="accuracy",
+    )
     print(f"  CV Accuracy: {cv_scores.mean():.4f} +/- {cv_scores.std():.4f}")
 
-    # Train on full training set, evaluate on test
-    print(f"  Training on full train set, evaluating on held-out test authors...")
-    model.fit(X_train_scaled, y_train)
+    # Evaluate on held-out test authors
+    print("  Evaluating on held-out test authors...")
     y_pred = model.predict(X_test_scaled)
 
-    # If test set has only one class, some metrics are meaningless
     n_classes_test = len(set(y_test))
     if n_classes_test < 2:
         print(f"  [!] Test set has only {n_classes_test} class(es) — skipping some metrics")
         acc = accuracy_score(y_test, y_pred)
-        prec = 0.0
-        rec = 0.0
-        f1 = 0.0
-        auc = 0.0
+        prec, rec, f1, auc = 0.0, 0.0, 0.0, 0.0
     else:
         acc = accuracy_score(y_test, y_pred)
         prec = precision_score(y_test, y_pred)
@@ -227,6 +199,7 @@ def run_verification(
         "model": "Logistic Regression",
         "n_passages": len(df),
         "n_authors": len(unique_authors),
+        "best_params": gs.best_params_,
         "cv_accuracy_mean": cv_scores.mean(),
         "cv_accuracy_std": cv_scores.std(),
         "test_accuracy": acc,
@@ -240,13 +213,11 @@ def run_verification(
 
 def main():
     parser = argparse.ArgumentParser(description="Authorship Verification — Logistic Regression")
-    parser.add_argument("--output", default="verification_results.md",
-                        help="Output markdown file")
+    parser.add_argument("--output", default="verification_results.md", help="Output markdown file")
     args = parser.parse_args()
 
     all_results = []
 
-    # ── 35 Authors (LesswrongLarge.csv) — Logistic Regression ───────────
     print("\n" + "=" * 62)
     print("  CASE: 35 Authors (LesswrongLarge.csv) — Logistic Regression")
     print("=" * 62)
@@ -254,15 +225,16 @@ def main():
     r = run_verification(df_35, "35 Authors")
     all_results.append(r)
 
-    # ── Write report ────────────────────────────────────────────────────
     print(f"\nSaving report to {args.output}...")
     md = "# Authorship Verification Results\n\n"
 
     md += "## Summary Table\n\n"
-    md += "| Case | Model | Passages | Authors | CV Acc | Test Acc | Precision | Recall | F1 | AUC |\n"
-    md += "|------|-------|----------|---------|--------|----------|-----------|--------|----|-----|\n"
+    md += "| Case | Model | Passages | Authors | Best Params | CV Acc | Test Acc | Precision | Recall | F1 | AUC |\n"
+    md += "|------|-------|----------|---------|-------------|--------|----------|-----------|--------|----|-----|\n"
     for r in all_results:
+        params_str = ", ".join(f"{k}={v}" for k, v in sorted(r["best_params"].items()))
         md += (f"| {r['case']} | {r['model']} | {r['n_passages']} | {r['n_authors']} "
+               f"| `{params_str}` "
                f"| {r['cv_accuracy_mean']:.4f}+/-{r['cv_accuracy_std']:.4f} "
                f"| {r['test_accuracy']:.4f} | {r['precision']:.4f} | {r['recall']:.4f} "
                f"| {r['f1']:.4f} | {r['auc']:.4f} |\n")
@@ -272,6 +244,7 @@ def main():
         md += f"### {r['case']} — {r['model']}\n\n"
         md += f"- **Passages:** {r['n_passages']}\n"
         md += f"- **Authors:** {r['n_authors']}\n"
+        md += f"- **Best Params:** `{params_str}`\n"
         md += f"- **CV Accuracy:** {r['cv_accuracy_mean']:.4f} +/- {r['cv_accuracy_std']:.4f}\n"
         md += f"- **Test Accuracy:** {r['test_accuracy']:.4f}\n"
         md += f"- **Precision:** {r['precision']:.4f}\n"

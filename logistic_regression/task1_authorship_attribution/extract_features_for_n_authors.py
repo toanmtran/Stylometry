@@ -2,58 +2,27 @@
 Extract stylometric features from cleaned datasets for N authors.
 
 Usage:
-    python scripts/extract_features_for_n_authors.py --input ../dataset/lesswrong_regular/cleaned_10 --output ../datasets/features_10authors.csv
-    python scripts/extract_features_for_n_authors.py --input ../dataset/lesswrong_large/cleaned_25 --output ../datasets/features_25authors.csv
-    python scripts/extract_features_for_n_authors.py --input ../dataset/lesswrong_large/cleaned_35 --output ../datasets/features_35authors.csv
-
-This enables scaling experiments: train Logistic Regression on 10, 25, 35 authors
-and compare performance with the 5-author baseline.
+    python extract_features_for_n_authors.py --input ../../dataset/lesswrong_regular/cleaned_10 --output features_10authors.csv
+    python extract_features_for_n_authors.py --input ../../dataset/lesswrong_large/cleaned_25 --output features_25authors.csv
+    python extract_features_for_n_authors.py --input ../../dataset/lesswrong_large/cleaned_35 --output features_35authors.csv
 """
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
 
 import pandas as pd
 
-# Add src to path so we can import features & preprocess
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from src.features import extract_features
 from src.preprocess import (
-    LoadedDoc,
-    strip_lesswrong_boilerplate,
+    load_folder,
     canonicalize_typography,
+    strip_lesswrong_boilerplate,
     word_count,
+    truncate_to_words,
 )
-
-
-def load_json_folder(folder: Path) -> list[dict]:
-    """Load all JSON files from a folder; return list of {author, text, file}."""
-    records = []
-    for fp in sorted(folder.glob("*.json")):
-        file_stem = fp.stem
-        with open(fp, encoding="utf-8-sig") as f:
-            raw = f.read()
-        # Handle possible trailing commas / control chars
-        try:
-            items = json.loads(raw)
-        except json.JSONDecodeError:
-            # Try cleaning control chars
-            import re
-            cleaned = re.sub(r",\s*([\]}])", r"\1", raw)
-            items = json.loads(cleaned)
-        for i, item in enumerate(items):
-            text = item.get("text", "")
-            author = item.get("author", "Unknown").strip().lower()
-            records.append({
-                "author": author,
-                "text": text,
-                "file": file_stem,
-                "idx": i,
-            })
-    return records
 
 
 def main():
@@ -70,22 +39,26 @@ def main():
         sys.exit(1)
 
     print(f"Loading data from {input_path}...")
-    records = load_json_folder(input_path)
-    print(f"  Loaded {len(records)} raw records")
+    docs = load_folder(input_path)
+    print(f"  Loaded {len(docs)} raw records")
 
     # Clean and filter
     valid = []
     dropped = 0
-    for rec in records:
-        text = canonicalize_typography(rec["text"])
+    for d in docs:
+        text = canonicalize_typography(d.text)
         text = strip_lesswrong_boilerplate(text)
         wc = word_count(text)
         if wc < args.min_words:
             dropped += 1
             continue
-        rec["text_clean"] = text
-        rec["word_count"] = wc
-        valid.append(rec)
+        valid.append({
+            "author": d.declared_author,
+            "text_clean": text,
+            "word_count": wc,
+            "file": d.file_stem,
+            "idx": d.index,
+        })
 
     print(f"  After cleaning: {len(valid)} valid, {dropped} dropped (< {args.min_words} words)")
 
@@ -93,7 +66,6 @@ def main():
     M = min(r["word_count"] for r in valid)
     print(f"  Truncating all to M = {M} words")
 
-    from src.preprocess import truncate_to_words
     for rec in valid:
         rec["text_clean"] = truncate_to_words(rec["text_clean"], M)
 
@@ -113,11 +85,10 @@ def main():
     n_authors = df["author"].nunique()
     per_author = df.groupby("author").size()
     print(f"  Authors: {n_authors}")
-    print(f"  Per-author distribution:")
+    print("  Per-author distribution:")
     for auth, cnt in per_author.items():
         print(f"    {auth}: {cnt}")
 
-    # Save
     df.to_csv(args.output, index=False)
     print(f"\nSaved to {args.output}")
 
