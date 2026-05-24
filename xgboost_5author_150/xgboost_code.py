@@ -7,13 +7,15 @@ Runs both cases (with / without outliers) and writes one MD file per case.
 """
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import (accuracy_score, classification_report,
-                              f1_score, precision_score, recall_score)
+from sklearn.metrics import (accuracy_score, auc, classification_report,
+                              confusion_matrix, f1_score, precision_score,
+                              recall_score, roc_auc_score, roc_curve)
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, label_binarize
 from xgboost import XGBClassifier
 
 # ── paths ──────────────────────────────────────────────────────────────────
@@ -50,8 +52,68 @@ def fmt_params(params: dict) -> str:
     return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
 
 
+def plot_roc_curves(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    class_names: list[str],
+    title: str,
+    save_path: str,
+) -> None:
+    n_classes = len(class_names)
+    y_bin = label_binarize(y_true, classes=list(range(n_classes)))
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    fpr_all, tpr_all = {}, {}
+    for i, name in enumerate(class_names):
+        fpr, tpr, _ = roc_curve(y_bin[:, i], y_prob[:, i])
+        fpr_all[i], tpr_all[i] = fpr, tpr
+        ax.plot(fpr, tpr, lw=1.5, label=f"{name}  (AUC={auc(fpr, tpr):.3f})")
+
+    all_fpr = np.unique(np.concatenate(list(fpr_all.values())))
+    mean_tpr = np.mean(
+        [np.interp(all_fpr, fpr_all[i], tpr_all[i]) for i in range(n_classes)], axis=0
+    )
+    macro_auc = auc(all_fpr, mean_tpr)
+    ax.plot(all_fpr, mean_tpr, "k--", lw=2, label=f"Macro avg  (AUC={macro_auc:.3f})")
+    ax.plot([0, 1], [0, 1], color="grey", linestyle=":", lw=1, label="Random")
+
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.set_title(title)
+    ax.legend(loc="lower right", fontsize=8)
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.02])
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=150)
+    plt.close()
+
+
+def compute_ece(y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
+    """Expected Calibration Error: confidence-accuracy gap weighted by bin size."""
+    confidences = y_prob.max(axis=1)
+    correct = (y_prob.argmax(axis=1) == y_true).astype(float)
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    ece = 0.0
+    for lo, hi in zip(bins[:-1], bins[1:]):
+        mask = (confidences > lo) & (confidences <= hi)
+        if mask.any():
+            ece += mask.mean() * abs(correct[mask].mean() - confidences[mask].mean())
+    return float(ece)
+
+
+def confusion_matrix_md(cm: np.ndarray, names: list[str]) -> str:
+    short = [n[:14] for n in names]
+    header = "| Actual \\ Pred | " + " | ".join(f"**{s}**" for s in short) + " |"
+    sep    = "|" + "---|" * (len(names) + 1)
+    rows   = [header, sep]
+    for i, row_vals in enumerate(cm):
+        rows.append(f"| **{short[i]}** | " + " | ".join(str(v) for v in row_vals) + " |")
+    return "\n".join(rows) + "\n"
+
+
 # ── nested CV ──────────────────────────────────────────────────────────────
-def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
+def run_nested_cv(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
     feature_cols = [c for c in df.columns if c not in METADATA_COLS]
     X = df[feature_cols].values
     le = LabelEncoder()
@@ -62,6 +124,9 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
 
     fold_results: list[dict] = []
     fold_reports: list[pd.DataFrame] = []
+    all_y_true: list[np.ndarray] = []
+    all_y_pred: list[np.ndarray] = []
+    all_y_prob: list[np.ndarray] = []
 
     n_combos = 1
     for v in PARAM_GRID.values():
@@ -91,42 +156,53 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
         gs.fit(X_train, y_train)
 
         y_pred = gs.predict(X_test)
-        acc  = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, average="macro",    zero_division=0)
-        rec  = recall_score(  y_test, y_pred, average="macro",    zero_division=0)
-        wf1  = f1_score(      y_test, y_pred, average="weighted", zero_division=0)
+        y_prob = gs.predict_proba(X_test)
+        acc     = accuracy_score(y_test, y_pred)
+        prec    = precision_score(y_test, y_pred, average="macro",    zero_division=0)
+        rec     = recall_score(  y_test, y_pred, average="macro",    zero_division=0)
+        wf1     = f1_score(      y_test, y_pred, average="weighted", zero_division=0)
+        roc_auc = roc_auc_score( y_test, y_prob, multi_class="ovr",  average="macro")
 
         print(f"  Fold {fold_idx}: acc={acc:.4f}  prec={prec:.4f}  "
-              f"rec={rec:.4f}  wF1={wf1:.4f}")
+              f"rec={rec:.4f}  wF1={wf1:.4f}  ROC-AUC={roc_auc:.4f}")
         print(f"          best: {fmt_params(gs.best_params_)}")
 
         fold_results.append({
-            "fold":       fold_idx,
+            "fold":        fold_idx,
             "best_params": fmt_params(gs.best_params_),
-            "accuracy":   acc,
-            "precision":  prec,
-            "recall":     rec,
-            "w_f1":       wf1,
+            "accuracy":    acc,
+            "precision":   prec,
+            "recall":      rec,
+            "w_f1":        wf1,
+            "roc_auc":     roc_auc,
         })
-
-        report = classification_report(
-            y_test, y_pred,
-            target_names=le.classes_,
+        fold_reports.append(pd.DataFrame(classification_report(
+            y_test, y_pred, target_names=le.classes_,
             output_dict=True, zero_division=0,
-        )
-        fold_reports.append(pd.DataFrame(report).T)
+        )).T)
+        all_y_true.append(y_test)
+        all_y_pred.append(y_pred)
+        all_y_prob.append(y_prob)
 
     # ── aggregate ──────────────────────────────────────────────────────────
+    agg_y_true = np.concatenate(all_y_true)
+    agg_y_pred = np.concatenate(all_y_pred)
+    agg_y_prob = np.vstack(all_y_prob)
+    agg_cm     = confusion_matrix(agg_y_true, agg_y_pred)
+    agg_ece    = compute_ece(agg_y_true, agg_y_prob)
+
     res = pd.DataFrame(fold_results)
     stats = {
         m: (res[m].mean(), res[m].std())
-        for m in ("accuracy", "precision", "recall", "w_f1")
+        for m in ("accuracy", "precision", "recall", "w_f1", "roc_auc")
     }
 
     print(f"\n  Mean  acc={stats['accuracy'][0]:.4f}+/-{stats['accuracy'][1]:.4f}  "
           f"prec={stats['precision'][0]:.4f}+/-{stats['precision'][1]:.4f}  "
           f"rec={stats['recall'][0]:.4f}+/-{stats['recall'][1]:.4f}  "
-          f"wF1={stats['w_f1'][0]:.4f}+/-{stats['w_f1'][1]:.4f}")
+          f"wF1={stats['w_f1'][0]:.4f}+/-{stats['w_f1'][1]:.4f}  "
+          f"ROC-AUC={stats['roc_auc'][0]:.4f}+/-{stats['roc_auc'][1]:.4f}  "
+          f"ECE={agg_ece:.4f}")
 
     avg_report   = pd.concat(fold_reports).groupby(level=0).mean()
     display_rows = list(le.classes_) + ["macro avg", "weighted avg"]
@@ -149,22 +225,37 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
     md += "\n"
 
     md += "## Per-Fold Results\n\n"
-    md += "| Fold | Accuracy | Precision (macro) | Recall (macro) | Weighted F1 | Best Params |\n"
-    md += "|------|----------|-------------------|----------------|-------------|-------------|\n"
+    md += "| Fold | Accuracy | Precision (macro) | Recall (macro) | Weighted F1 | ROC-AUC | Best Params |\n"
+    md += "|------|----------|-------------------|----------------|-------------|---------|-------------|\n"
     for row in fold_results:
         md += (f"| {row['fold']} | {row['accuracy']:.4f} | {row['precision']:.4f} "
-               f"| {row['recall']:.4f} | {row['w_f1']:.4f} | `{row['best_params']}` |\n")
+               f"| {row['recall']:.4f} | {row['w_f1']:.4f} | {row['roc_auc']:.4f} "
+               f"| `{row['best_params']}` |\n")
 
     md += "\n## Summary\n\n"
     md += "| Metric | Mean | Std |\n|--------|------|-----|\n"
-    md += f"| Accuracy           | {stats['accuracy'][0]:.4f}  | {stats['accuracy'][1]:.4f}  |\n"
-    md += f"| Precision (macro)  | {stats['precision'][0]:.4f} | {stats['precision'][1]:.4f} |\n"
-    md += f"| Recall (macro)     | {stats['recall'][0]:.4f}    | {stats['recall'][1]:.4f}    |\n"
-    md += f"| Weighted F1        | {stats['w_f1'][0]:.4f}      | {stats['w_f1'][1]:.4f}      |\n"
+    md += f"| Accuracy            | {stats['accuracy'][0]:.4f}  | {stats['accuracy'][1]:.4f}  |\n"
+    md += f"| Precision (macro)   | {stats['precision'][0]:.4f} | {stats['precision'][1]:.4f} |\n"
+    md += f"| Recall (macro)      | {stats['recall'][0]:.4f}    | {stats['recall'][1]:.4f}    |\n"
+    md += f"| Weighted F1         | {stats['w_f1'][0]:.4f}      | {stats['w_f1'][1]:.4f}      |\n"
+    md += f"| ROC-AUC (macro OvR) | {stats['roc_auc'][0]:.4f}   | {stats['roc_auc'][1]:.4f}   |\n"
+    md += f"| ECE (aggregated)    | {agg_ece:.4f}               | —                           |\n"
 
     md += "\n## Average Classification Report\n\n"
     md += "_Per-class metrics averaged across all outer folds._\n\n"
-    md += avg_table.to_markdown() + "\n"
+    md += avg_table.to_markdown() + "\n\n"
+
+    md += "## Confusion Matrix\n\n"
+    md += "_Aggregated across all outer folds. Rows = actual, Columns = predicted._\n\n"
+    md += confusion_matrix_md(agg_cm, list(le.classes_)) + "\n"
+
+    plot_roc_curves(
+        agg_y_true, agg_y_prob, list(le.classes_),
+        title=f"ROC Curves — XGBoost ({case_label})",
+        save_path=plot_path,
+    )
+    plot_fname = os.path.basename(plot_path)
+    md += f"## ROC Curves\n\n![ROC Curves]({plot_fname})\n"
 
     return md
 
@@ -184,15 +275,16 @@ def main() -> None:
         print(f"  Clean dataset: {len(df_clean)} rows")
 
     cases = [
-        (df_full,  "With Outliers",    "results_with_outliers.md"),
-        (df_clean, "Without Outliers", "results_without_outliers.md"),
+        (df_full,  "With Outliers",    "results_with_outliers.md",    "roc_with_outliers.png"),
+        (df_clean, "Without Outliers", "results_without_outliers.md", "roc_without_outliers.png"),
     ]
-    for df, label, outfile in cases:
-        md = run_nested_cv(df, label)
-        out_path = os.path.join(_HERE, outfile)
+    for df, label, outfile, plotfile in cases:
+        plot_path = os.path.join(_HERE, plotfile)
+        md        = run_nested_cv(df, label, plot_path=plot_path)
+        out_path  = os.path.join(_HERE, outfile)
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(md)
-        print(f"\nSaved: {out_path}")
+        print(f"\nSaved: {out_path}  |  {plot_path}")
 
 
 if __name__ == "__main__":
