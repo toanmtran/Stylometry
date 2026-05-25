@@ -1,98 +1,98 @@
-"""# Logistic Regression - Authorship Stylometry
+# Logistic Regression - Authorship Stylometry
 
-Thu muc nay chua cac thuc nghiem **Logistic Regression** cho cac bai toan stylometry.
+This directory contains **Logistic Regression** experiments for stylometry tasks.
 
 ---
 
-## Cau truc thu muc
+## Directory Structure
 
 ```
 logistic_regression/
 |-- _config.py                                              # Shared config, constants, helpers
-|-- read_me.md                                             # Huong dan su dung
+|-- read_me.md                                             # Usage guide
 |
 |-- task1_authorship_attribution/                          # Task 1: Authorship Attribution
 |   |-- logistic_regression_code.py                        #   Nested CV training
-|   |-- predict_demo.py                                    #   Demo: du doan tac gia
-|   |-- results_with_outliers.md                           #   Ket qua co outliers
-|   |-- results_without_outliers.md                        #   Ket qua khong outliers
-|   |-- extract_features_for_n_authors.py                  #   Helper: trich features cho N authors
-|   |-- features_10authors.csv                             #   Features da trich (10 authors)
-|   |-- features_25authors.csv                             #   Features da trich (25 authors)
-|   +-- _test_steve.txt, _test_zvi.txt                     #   File text mau de test demo
+|   |-- predict_demo.py                                    #   Demo: predict author
+|   |-- results_with_outliers.md                           #   Results (with outliers)
+|   |-- results_without_outliers.md                        #   Results (without outliers)
+|   |-- extract_features_for_n_authors.py                  #   Helper: extract features for N authors
+|   |-- features_10authors.csv                             #   Extracted features (10 authors)
+|   |-- features_25authors.csv                             #   Extracted features (25 authors)
+|   +-- _test_steve.txt, _test_zvi.txt                     #   Sample text files for demo
 |
 |-- task2_verification/                                    # Task 2: Authorship Verification
 |   |-- logistic_regression_verification.py                #   Pairwise verification (Logistic Regression)
-|   |-- verify_demo.py                                     #   Demo: kiem tra 2 van ban
-|   +-- verification_results.md                            #   Ket qua tong hop
+|   |-- verify_demo.py                                     #   Demo: check 2 texts
+|   +-- verification_results.md                            #   Summary results
 |
 +-- bonus_ai_detection/                                    # Bonus: AI / Human Detection
     |-- ai_detection_lr.py                                 #   Train + predict
-    |-- ai_detection_lr_model.pkl                          #   Model da train
+    |-- ai_detection_lr_model.pkl                          #   Trained model
     |-- ai_detection_lr_scaler.pkl                         #   Scaler
     |-- ai_detection_lr_features.pkl                       #   Feature names
     |-- ai_detection_lr_feature_importance.csv             #   Feature importance
-    +-- ai_detection_lr_report.md                          #   Bao cao ket qua
+    +-- ai_detection_lr_report.md                          #   Results report
 ```
 
 ---
 
-## Yeu cau
+## Requirements
 
 - Python 3.10+
-- Thu vien: numpy, pandas, scikit-learn
+- Libraries: numpy, pandas, scikit-learn, joblib
 
 ```
-pip install numpy pandas scikit-learn
+pip install numpy pandas scikit-learn joblib
 ```
 
 ---
 
-## Cach chay tung task
+## How to Run Each Task
 
 ### Task 1: Authorship Attribution
 
-Xac dinh tac gia cua mot van ban (multi-class, 25 authors) voi nested cross-validation.
+Identify the author of a text (multi-class, 25 authors) using nested cross-validation.
 
 ```
 cd logistic_regression/task1_authorship_attribution
 python logistic_regression_code.py
 ```
 
-**Dau vao:**
+**Input:**
 - `features_25authors.csv` - 25 authors, 868 passages, 107 stylometric features
 
-**Dau ra:**
+**Output:**
 - `results_with_outliers.md`
 - `results_without_outliers.md`
 
-**Cau hinh trong code:**
-- `PARAM_GRID` - luoi sieu tham so (C, max_iter, ...)
-- `OUTER_FOLDS` / `INNER_FOLDS` - so fold ngoai/trong
-- `RANDOM_STATE` - seed de tai lap ket qua
+**Configuration in code:**
+- `PARAM_GRID_LR` - hyperparameter grid (C, max_iter, ...)
+- `OUTER_FOLDS` / `INNER_FOLDS` - number of outer/inner folds
+- `RANDOM_STATE` - seed for reproducibility
 
-#### Demo: Du doan tac gia cho van ban bat ky
+#### Demo: Predict author for any text
 
 ```
 cd logistic_regression/task1_authorship_attribution
 
-# Chay voi text mau (mac dinh)
+# Run with sample text (default)
 python predict_demo.py
 
-# Nhap text truc tiep
+# Input text directly
 python predict_demo.py --text "Your text here..."
 
-# Nhap tu file .txt
+# Input from .txt file
 python predict_demo.py --file _test_steve.txt
 python predict_demo.py --file _test_zvi.txt
 
-# Dung model co outliers (mac dinh la khong outliers)
+# Use model with outliers (default is without outliers)
 python predict_demo.py --with-outliers
 ```
 
-**Giai thich:** Script se retrain Logistic Regression tren toan bo dataset, trich features tu text dau vao, va du doan tac gia kem xac suat cho tung tac gia (hien thi bang bar chart). Mac dinh dung bo features da loai outliers.
+**Explanation:** The script retrains Logistic Regression on the full dataset, extracts features from the input text, and predicts the author with probabilities for each author (displayed as a bar chart). Default uses features without outliers.
 
-#### Trich xuat features cho N authors (mo rong)
+#### Extract features for N authors (extension)
 
 ```
 cd logistic_regression/task1_authorship_attribution
@@ -110,46 +110,46 @@ python extract_features_for_n_authors.py ^
 
 ### Task 2: Authorship Verification
 
-Xac dinh xem hai van ban co cung tac gia khong (binary pairwise). Dung Logistic Regression.
+Determine whether two texts are by the same author (binary pairwise). Uses Logistic Regression.
 
 ```
 cd logistic_regression/task2_verification
 python logistic_regression_verification.py
 ```
 
-**Dau vao:**
-- `../../SVM/LesswrongLarge.csv` - 35 authors, 1484 passages
+**Input:**
+- `../../SVM/data/LesswrongLarge.csv` - 35 authors, 1484 passages
 
-**Dau ra:** `verification_results.md`
+**Output:** `verification_results.md`
 
-**Cach hoat dong:**
-- Tao positive pairs (cung tac gia) va negative pairs (khac tac gia)
-- Pair feature = `[abs_diff(A,B), sq_diff(A,B), mult(A,B)]` = 3 * n_features
+**How it works:**
+- Generate positive pairs (same author) and negative pairs (different authors)
+- Pair feature = `[abs_diff(A,B), sq_diff(A,B), mult(A,B)]` = 3 × n_features
 - Train Logistic Regression binary classifier
-- Dung GroupKFold de tranh data leakage
+- Uses author-level split + StratifiedKFold to prevent data leakage
 
-#### Demo: Kiem tra 2 van ban co cung tac gia khong
+#### Demo: Check if two texts share the same author
 
 ```
 cd logistic_regression/task2_verification
 
-# Chay voi text mau (mac dinh)
+# Run with sample texts (default)
 python verify_demo.py
 
-# Nhap 2 text truc tiep
+# Input 2 texts directly
 python verify_demo.py --text1 "First text..." --text2 "Second text..."
 
-# Nhap tu 2 file .txt
+# Input from 2 .txt files
 python verify_demo.py --file1 text_a.txt --file2 text_b.txt
 ```
 
-**Giai thich:** Script se train Logistic Regression tren toan bo 35 authors, trich features cho ca 2 van ban dau vao, tao pair feature, va du doan "CUNG TAC GIA" hay "KHAC TAC GIA" kem confidence.
+**Explanation:** The script trains Logistic Regression on all 35 authors, extracts features for both input texts, builds a pair feature vector, and predicts "SAME AUTHOR" or "DIFFERENT AUTHORS" with confidence.
 
 ---
 
 ### Bonus: AI / Human Detection
 
-Phan loai bai viet la HUMAN (<=2022) hay AI (>=2024).
+Classify a passage as HUMAN (<=2022) or AI (>=2024).
 
 ```
 cd logistic_regression/bonus_ai_detection
@@ -157,36 +157,32 @@ cd logistic_regression/bonus_ai_detection
 # Train model
 python ai_detection_lr.py
 
-# Du doan van ban moi
+# Predict new text
 python ai_detection_lr.py --text "Your text here..."
 python ai_detection_lr.py --file input.txt
 ```
 
 ---
 
+## Summary of Results
 
----
-
-## Ket qua tom tat
-
-| Task | Dataset | Metric | Gia tri |
-|------|---------|--------|---------|
-| Attribution (co outliers) | 25 auth, 868 passages | Accuracy | 73.26% |
-| Attribution (khong outliers) | 25 auth, ~783 passages | Accuracy | 70.73% |
+| Task | Dataset | Metric | Value |
+|------|---------|--------|-------|
+| Attribution (with outliers) | 25 auth, 868 passages | Accuracy | 73.26% |
+| Attribution (without outliers) | 25 auth, 868 passages | Accuracy | 70.73% |
 | Verification (35 auth) | 1484 passages | AUC | 0.7759 |
 | AI Detection | 10 auth, 666 passages | Accuracy | 65.67% |
 | AI Detection | 10 auth, 666 passages | AUC | 0.7420 |
 
-> **Luu y:** Ket qua da duoc cap nhat sau khi fix data leakage (Scaler + IsolationForest chi fit tren training fold). Truoc khi fix, ket qua "khong outliers" bi thoi phong len 75.10%. Cac model Verification va AI Detection hien co hyperparameter tuning (GridSearchCV).
+> **Note:** Results updated after fixing data leakage (Scaler + IsolationForest fit only on training fold). Before the fix, the "without outliers" result was inflated to 75.10%. Verification and AI Detection models now include hyperparameter tuning (GridSearchCV).
 
 ---
 
-## Ghi chu
+## Notes
 
-- Cac file Python chay doc lap (standalone), chi can dung duong dan dataset
-- Feature extraction dung module `src.features` va `src.preprocess` tu thu muc goc
-- File demo se retrain model moi moi lan chay (khong dung model pkl san)
-- Cac model khac (Random Forest, XGBoost, Neural Network, SVM) nam o thu muc rieng
-- Task 2 chi dung Logistic Regression (khong con SVM, RF)
-- **2026-05-23:** Da fix data leakage (Scaler + IsolationForest fit trong CV fold), them hyperparameter tuning cho Verification + AI Detection, tao `_config.py` shared module
-"""
+- All Python scripts are standalone — just point them at the correct dataset paths
+- Feature extraction uses the `src.features` and `src.preprocess` modules from the project root
+- Demo scripts retrain the model on each run (no pre-saved .pkl model used)
+- Other models (Random Forest, XGBoost, Neural Network, SVM) are in separate directories
+- Task 2 uses only Logistic Regression (no longer SVM, RF)
+- **2026-05-25:** Fixed data leakage (Scaler + IsolationForest fit inside CV fold), added hyperparameter tuning for Verification + AI Detection, created `_config.py` shared module

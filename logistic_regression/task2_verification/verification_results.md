@@ -2,9 +2,9 @@
 
 ## Summary Table
 
-| Case | Model | Passages | Authors | CV Acc | Test Acc | Precision | Recall | F1 | AUC |
-|------|-------|----------|---------|--------|----------|-----------|--------|----|-----|
-| 35 Authors | Logistic Regression | 1484 | 35 | 0.7181+/-0.0327 | 0.7002 | 0.6783 | 0.7614 | 0.7175 | 0.7748 |
+| Case | Model | Passages | Authors | Best Params | CV Acc | Test Acc | Precision | Recall | F1 | AUC |
+|------|-------|----------|---------|-------------|--------|----------|-----------|--------|----|-----|
+| 35 Authors | Logistic Regression | 1484 | 35 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` | 0.7812+/-0.0012 | 0.6999 | 0.6786 | 0.7593 | 0.7167 | 0.7759 |
 
 ## Detailed Results
 
@@ -12,17 +12,18 @@
 
 - **Passages:** 1484
 - **Authors:** 35
-- **CV Accuracy:** 0.7181 +/- 0.0327
-- **Test Accuracy:** 0.7002
-- **Precision:** 0.6783
-- **Recall:** 0.7614
-- **F1:** 0.7175
-- **AUC:** 0.7748
+- **Best Params:** `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs`
+- **CV Accuracy:** 0.7812 +/- 0.0012
+- **Test Accuracy:** 0.6999
+- **Precision:** 0.6786
+- **Recall:** 0.7593
+- **F1:** 0.7167
+- **AUC:** 0.7759
 
 **Confusion Matrix:**
 
 | | Predicted Diff | Predicted Same |
 |---|---:|---:|
-| Actual Different | 2081 | 1176 |
-| Actual Same | 777 | 2480 |
+| Actual Different | 2086 | 1171 |
+| Actual Same | 784 | 2473 |
 

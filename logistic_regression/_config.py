@@ -29,7 +29,7 @@ FEATURES_25AUTHORS = os.path.join(_HERE, "task1_authorship_attribution", "featur
 FEATURES_10AUTHORS = os.path.join(_HERE, "task1_authorship_attribution", "features_10authors.csv")
 
 # Dataset CSVs
-LESSWRONG_LARGE = os.path.join(ROOT, "SVM", "LesswrongLarge.csv")
+LESSWRONG_LARGE = os.path.join(ROOT, "SVM", "data", "LesswrongLarge.csv")
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
