@@ -104,8 +104,3 @@ def process_and_save_data(csv_path, output_path, seed=42):
         y_test_pairs = y_test_pairs          
     )
     print(f"Saved: {output_path}\n")
-
-if __name__ == "__main__":
-    for i in range(5):
-        t = i + 19
-        process_and_save_data('D:\ML project\SVM\LesswrongLarge.csv', f'processed_data_seed_{t}.npz', seed=t)
