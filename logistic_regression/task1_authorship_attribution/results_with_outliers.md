@@ -3,7 +3,8 @@
 ## Configuration
 
 - **Classifier:** Logistic Regression (multinomial / softmax)
-- **Scaler:** StandardScaler
+- **Scaler:** StandardScaler (re-fit per outer fold — no leakage)
+- **Outlier removal:** none
 - **Outer folds:** 5 (performance estimation)
 - **Inner folds:** 3 (hyperparameter tuning via GridSearchCV)
 - **Param combinations:** 15
@@ -24,19 +25,19 @@
 | Fold | Accuracy | Precision (macro) | Recall (macro) | Weighted F1 | Best Params |
 |------|----------|-------------------|----------------|-------------|-------------|
 | 1 | 0.7299 | 0.7393 | 0.7339 | 0.7200 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
-| 2 | 0.7701 | 0.7916 | 0.7723 | 0.7693 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
-| 3 | 0.7816 | 0.7886 | 0.7861 | 0.7710 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
+| 2 | 0.7701 | 0.7955 | 0.7723 | 0.7704 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
+| 3 | 0.7874 | 0.7955 | 0.7911 | 0.7758 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
 | 4 | 0.6994 | 0.7293 | 0.7010 | 0.6879 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
-| 5 | 0.6821 | 0.7028 | 0.6841 | 0.6752 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
+| 5 | 0.6763 | 0.6953 | 0.6784 | 0.6677 | `C=0.1, max_iter=1000, penalty=l2, solver=lbfgs` |
 
 ## Summary
 
 | Metric | Mean | Std |
 |--------|------|-----|
-| Accuracy           | 0.7326  | 0.0432  |
-| Precision (macro)  | 0.7503 | 0.0387 |
-| Recall (macro)     | 0.7355    | 0.0440    |
-| Weighted F1        | 0.7247      | 0.0446      |
+| Accuracy           | 0.7326  | 0.0466  |
+| Precision (macro)  | 0.7510 | 0.0438 |
+| Recall (macro)     | 0.7353    | 0.0472    |
+| Weighted F1        | 0.7244      | 0.0483      |
 
 ## Average Classification Report
 
@@ -45,11 +46,11 @@ _Per-class metrics averaged across all outer folds._
 |                      |   precision |   recall |   f1-score |   support |
 |:---------------------|------------:|---------:|-----------:|----------:|
 | abramdemski          |    0.917857 | 0.917857 |   0.91619  |       7.4 |
-| adamshimi            |    0.74     | 0.817857 |   0.775556 |       7.6 |
+| adamshimi            |    0.723333 | 0.817857 |   0.766732 |       7.6 |
 | benquo               |    0.485859 | 0.55     |   0.483591 |       8   |
 | buck                 |    0.78619  | 0.806667 |   0.792634 |       5.2 |
 | david-gross          |    0.840873 | 0.871429 |   0.846092 |       7.8 |
-| eliezer_yudkowsky    |    0.630519 | 0.608333 |   0.614874 |       8.2 |
+| eliezer_yudkowsky    |    0.685758 | 0.608333 |   0.635094 |       8.2 |
 | elizabeth-1          |    0.678571 | 0.793333 |   0.719267 |       5.8 |
 | gordon-seidoh-worley |    0.653333 | 0.575    |   0.593557 |       8   |
 | holdenkarnofsky      |    0.866667 | 0.673333 |   0.731111 |       5.6 |
@@ -57,20 +58,20 @@ _Per-class metrics averaged across all outer folds._
 | jasoncrawford        |    0.765556 | 0.686111 |   0.712293 |       8.2 |
 | joe-carlsmith        |    0.811111 | 0.909524 |   0.847179 |       6.4 |
 | johnswentworth       |    0.95     | 0.857143 |   0.889377 |       6.8 |
-| kaj_sotala           |    0.526667 | 0.483333 |   0.486886 |       8.2 |
+| kaj_sotala           |    0.517692 | 0.483333 |   0.48022  |       8.2 |
 | katjagrace           |    0.765556 | 0.777778 |   0.767161 |       8.2 |
 | petermccluskey       |    0.971429 | 0.966667 |   0.966434 |       6.2 |
-| raemon               |    0.695    | 0.733333 |   0.697662 |       6   |
+| raemon               |    0.672857 | 0.733333 |   0.694106 |       6   |
 | ruby                 |    0.432381 | 0.42     |   0.419394 |       5.8 |
 | ryan_greenblatt      |    0.888095 | 0.864286 |   0.871795 |       7.2 |
-| sarahconstantin      |    0.679286 | 0.657143 |   0.660952 |       7   |
-| screwtape            |    0.774603 | 0.696429 |   0.711597 |       7.4 |
+| sarahconstantin      |    0.665    | 0.628571 |   0.638974 |       7   |
+| screwtape            |    0.764502 | 0.721429 |   0.715312 |       7.4 |
 | steve2152            |    0.769286 | 0.82381  |   0.786451 |       6.8 |
-| tsvibt               |    0.791429 | 0.6      |   0.630849 |       6.2 |
+| tsvibt               |    0.824762 | 0.6      |   0.639738 |       6.2 |
 | zack_m_davis         |    0.750476 | 0.7      |   0.715711 |       6   |
 | zvi                  |    0.921429 | 0.833333 |   0.837862 |       6   |
-| macro avg            |    0.750334 | 0.735479 |   0.727407 |     173.6 |
-| weighted avg         |    0.746689 | 0.732622 |   0.724675 |     173.6 |
+| macro avg            |    0.750991 | 0.735337 |   0.727079 |     173.6 |
+| weighted avg         |    0.747388 | 0.732616 |   0.724355 |     173.6 |
 
 ## Feature Importance (Coefficient Analysis)
 
@@ -78,7 +79,7 @@ Trained on full dataset with best hyperparameters found via inner CV.
 
 ### Top 5 Positive Features Per Author
 
-_Features with highest positive coefficient → strongly associated with this author._
+_Features with highest positive coefficient — strongly associated with this author._
 
 **abramdemski:**
 
@@ -332,7 +333,7 @@ _Features with highest positive coefficient → strongly associated with this au
 
 ### Top 5 Negative Features Per Author
 
-_Features with most negative coefficient → strongly disassociated from this author._
+_Features with most negative coefficient — strongly disassociated from this author._
 
 **abramdemski:**
 

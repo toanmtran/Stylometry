@@ -270,7 +270,9 @@ def predict_text(text: str, clf, scaler, feature_names: list[str]):
     }
 
 
-def save_model(clf, scaler, coef_df, feature_names, results, output_dir="."):
+def save_model(clf, scaler, coef_df, feature_names, results, output_dir=None):
+    if output_dir is None:
+        output_dir = _HERE
     """Save model artifacts to disk."""
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
