@@ -22,6 +22,7 @@ import os
 import random
 from itertools import combinations
 
+import joblib
 import numpy as np
 import pandas as pd
 
@@ -193,6 +194,14 @@ def run_verification(df: pd.DataFrame, case_label: str) -> dict:
     cm = confusion_matrix(y_test, y_pred)
     print(f"    TN={cm[0,0]}  FP={cm[0,1]}")
     print(f"    FN={cm[1,0]}  TP={cm[1,1]}")
+
+    # ── Save model for verify_demo.py ─────────────────────────────────────
+    save_dir = os.path.join(_HERE, "saved_model")
+    os.makedirs(save_dir, exist_ok=True)
+    joblib.dump(model, os.path.join(save_dir, "lr_verification.joblib"))
+    joblib.dump(scaler, os.path.join(save_dir, "scaler.joblib"))
+    joblib.dump(feature_cols, os.path.join(save_dir, "feature_cols.joblib"))
+    print(f"\n  Saved model to: {save_dir}/")
 
     return {
         "case": case_label,

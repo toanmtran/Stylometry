@@ -19,6 +19,7 @@ IMPORTANT — data-leakage safeguards:
 import os
 import sys
 
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -184,6 +185,16 @@ def run_nested_cv(df: pd.DataFrame, case_label: str) -> str:
     coef_df, top_feats, bottom_feats = extract_feature_importance(
         final_model, feature_cols, list(le.classes_),
     )
+
+    # ── Save model for predict_demo.py ─────────────────────────────────────
+    case_slug = "clean" if remove_outliers_flag else "outliers"
+    save_dir = os.path.join(_HERE, "saved_model", case_slug)
+    os.makedirs(save_dir, exist_ok=True)
+    joblib.dump(final_model, os.path.join(save_dir, "lr_attribution.joblib"))
+    joblib.dump(final_scaler, os.path.join(save_dir, "scaler.joblib"))
+    joblib.dump(le, os.path.join(save_dir, "label_encoder.joblib"))
+    joblib.dump(feature_cols, os.path.join(save_dir, "feature_cols.joblib"))
+    print(f"  Saved model to: {save_dir}/")
 
     # ── markdown ───────────────────────────────────────────────────────────
     md = f"# Logistic Regression Authorship Classification — {case_label}\n\n"

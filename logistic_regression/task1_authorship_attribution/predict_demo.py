@@ -5,17 +5,17 @@ Usage:
   python predict_demo.py                              # sample text
   python predict_demo.py --text "Your text here..."    # inline text
   python predict_demo.py --file input.txt              # from file
+  python predict_demo.py --with-outliers               # use model trained with outliers
+
+The model must first be trained by logistic_regression_code.py,
+which saves it to saved_model/clean/ and saved_model/outliers/.
 """
 import argparse
 import os
 import sys
 
+import joblib
 import numpy as np
-import pandas as pd
-from sklearn.ensemble import IsolationForest
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # ── bootstrap project path ─────────────────────────────────────────────────────
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,44 +26,31 @@ _PROJECT_ROOT = os.path.join(_HERE, "..", "..")
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from _config import (
-    METADATA_COLS, PARAM_GRID_LR, RANDOM_STATE,
-    remove_outliers, configure_stdout_utf8,
-)
+from _config import configure_stdout_utf8
 from src.features import extract_features
 
 configure_stdout_utf8()
 
-# ── config ─────────────────────────────────────────────────────────────────────
-FULL_CSV = os.path.join(_HERE, "features_25authors.csv")
+# ── paths ─────────────────────────────────────────────────────────────────────
+MODEL_DIR_CLEAN = os.path.join(_HERE, "saved_model", "clean")
+MODEL_DIR_OUTLIERS = os.path.join(_HERE, "saved_model", "outliers")
 
 
-def train_model(use_clean: bool = True):
-    """Train Logistic Regression on the full 25-author feature set."""
-    df = pd.read_csv(FULL_CSV)
-    if use_clean:
-        df = remove_outliers(df, contamination=0.05)
+def load_model(use_clean: bool = True):
+    """Load pre-trained model from disk.
 
-    feature_cols = [c for c in df.columns if c not in METADATA_COLS]
-    X = df[feature_cols].values
-    le = LabelEncoder()
-    y = le.fit_transform(df["author"])
+    Models are saved by logistic_regression_code.py after Nested CV retrain.
+    """
+    model_dir = MODEL_DIR_CLEAN if use_clean else MODEL_DIR_OUTLIERS
+    case_label = "clean (no outliers)" if use_clean else "with outliers"
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    model = joblib.load(os.path.join(model_dir, "lr_attribution.joblib"))
+    scaler = joblib.load(os.path.join(model_dir, "scaler.joblib"))
+    le = joblib.load(os.path.join(model_dir, "label_encoder.joblib"))
+    feature_cols = joblib.load(os.path.join(model_dir, "feature_cols.joblib"))
 
-    gs = GridSearchCV(
-        LogisticRegression(random_state=RANDOM_STATE, n_jobs=-1),
-        PARAM_GRID_LR, cv=3, scoring="accuracy",
-        n_jobs=-1, refit=True,
-    )
-    gs.fit(X_scaled, y)
-
-    model = gs.best_estimator_
-    print(f"[OK] Model trained on {len(df)} passages, {len(feature_cols)} features")
-    print(f"     Best params: {gs.best_params_}")
+    print(f"[OK] Loaded model ({case_label})")
     print(f"     Authors: {list(le.classes_)}")
-
     return model, scaler, le, feature_cols
 
 
@@ -123,7 +110,8 @@ def main():
     parser = argparse.ArgumentParser(description="Predict author with Logistic Regression")
     parser.add_argument("--text", type=str, help="Text to classify")
     parser.add_argument("--file", type=str, help="File containing text")
-    parser.add_argument("--with-outliers", action="store_true", help="Use model trained with outliers")
+    parser.add_argument("--with-outliers", action="store_true",
+                        help="Use model trained with outliers (default: clean)")
     args = parser.parse_args()
 
     if args.file:
@@ -148,8 +136,16 @@ def main():
               "Stylometric features may be unreliable.")
 
     use_clean = not args.with_outliers
-    print("\nTraining model on full dataset...")
-    model, scaler, le, feature_cols = train_model(use_clean=use_clean)
+
+    # Check if model exists
+    model_dir = MODEL_DIR_CLEAN if use_clean else MODEL_DIR_OUTLIERS
+    if not os.path.exists(model_dir):
+        print(f"[ERROR] Model not found at: {model_dir}")
+        print("Run logistic_regression_code.py first to train and save the model.")
+        sys.exit(1)
+
+    print(f"\nLoading model...")
+    model, scaler, le, feature_cols = load_model(use_clean=use_clean)
     author, probas = predict(text, model, scaler, le, feature_cols)
     print_result(text, author, probas)
 
