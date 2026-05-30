@@ -6,18 +6,16 @@ Usage:
   python verify_demo.py                                    # sample texts
   python verify_demo.py --text1 "text 1" --text2 "text 2"  # inline
   python verify_demo.py --file1 a.txt --file2 b.txt        # from files
+
+The model must first be trained by logistic_regression_verification.py,
+which saves it to saved_model/.
 """
 import argparse
 import os
-import random
 import sys
-from itertools import combinations
 
+import joblib
 import numpy as np
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
-from sklearn.preprocessing import StandardScaler
 
 # ── bootstrap project path ─────────────────────────────────────────────────────
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,77 +26,29 @@ _ROOT = os.path.join(_HERE, "..", "..")
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from _config import (
-    RANDOM_STATE, configure_stdout_utf8,
-    generate_pair_features, PARAM_GRID_LR_SIMPLE,
-)
-from _config import LESSWRONG_LARGE as LARGE_CSV
+from _config import generate_pair_features, configure_stdout_utf8
 from src.features import extract_features
 
 configure_stdout_utf8()
 
-# ── Config ─────────────────────────────────────────────────────────────────────
-METADATA_COLS = {"author", "passage_id", "_label"}
-TRAIN_FRAC = 0.85  # fraction of authors used for training
+# ── paths ─────────────────────────────────────────────────────────────────────
+MODEL_DIR = os.path.join(_HERE, "saved_model")
+MODEL_PATH = os.path.join(MODEL_DIR, "lr_verification.joblib")
+SCALER_PATH = os.path.join(MODEL_DIR, "scaler.joblib")
+FEATURE_COLS_PATH = os.path.join(MODEL_DIR, "feature_cols.joblib")
 
 
-def load_data(csv_path: str) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
-    df["author"] = df["author"].str.strip().str.lower()
-    return df
+def load_model():
+    """Load pre-trained verification model from disk.
 
+    Model is saved by logistic_regression_verification.py after training.
+    """
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    feature_cols = joblib.load(FEATURE_COLS_PATH)
 
-def train_model(df: pd.DataFrame):
-    feature_cols = [c for c in df.columns if c not in METADATA_COLS]
-    X = df[feature_cols].values
-    authors = df["author"].values
-    unique_authors = sorted(set(authors))
-
-    # Author-level train/test split
-    random.seed(RANDOM_STATE)
-    n_train = max(2, int(len(unique_authors) * TRAIN_FRAC))
-    train_authors, _ = train_test_split(
-        unique_authors, train_size=n_train, random_state=RANDOM_STATE,
-    )
-    mask = np.isin(authors, train_authors)
-    X_train = X[mask]
-    y_train = authors[mask]
-
-    # Generate pairs
-    pos_pairs, neg_pairs = [], []
-    for auth in train_authors:
-        idx = np.where(y_train == auth)[0]
-        if len(idx) < 2:
-            continue
-        for i, j in combinations(idx, 2):
-            pos_pairs.append(generate_pair_features(X_train[i], X_train[j]))
-
-    num_pos = len(pos_pairs)
-    selected_list = list(train_authors)
-    for _ in range(num_pos):
-        a1, a2 = random.sample(selected_list, 2)
-        i = random.choice(np.where(y_train == a1)[0])
-        j = random.choice(np.where(y_train == a2)[0])
-        neg_pairs.append(generate_pair_features(X_train[i], X_train[j]))
-
-    X_pairs = np.vstack((pos_pairs, neg_pairs))
-    y_pairs = np.concatenate([np.ones(num_pos), np.zeros(num_pos)])
-
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_pairs)
-
-    # Tune hyperparameters
-    gs = GridSearchCV(
-        LogisticRegression(random_state=RANDOM_STATE, n_jobs=-1),
-        PARAM_GRID_LR_SIMPLE,
-        cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE),
-        scoring="roc_auc", n_jobs=-1, refit=True,
-    )
-    gs.fit(X_scaled, y_pairs)
-    model = gs.best_estimator_
-    print(f"[OK] Trained on {len(train_authors)} authors, {len(y_pairs)} pairs")
-    print(f"     Best params: {gs.best_params_}, CV AUC: {gs.best_score_:.4f}")
-
+    print(f"[OK] Loaded model from: {MODEL_DIR}/")
+    print(f"     {len(feature_cols)} features → {len(feature_cols) * 3} pair features")
     return model, scaler, feature_cols
 
 
@@ -148,9 +98,14 @@ def main():
         )
         print("(Using sample texts)")
 
-    print("\nTraining model...")
-    df = load_data(LARGE_CSV)
-    model, scaler, feature_cols = train_model(df)
+    # Check if model exists
+    if not os.path.exists(MODEL_PATH):
+        print(f"[ERROR] Model not found at: {MODEL_DIR}")
+        print("Run logistic_regression_verification.py first to train and save the model.")
+        sys.exit(1)
+
+    print("Loading model...")
+    model, scaler, feature_cols = load_model()
 
     print("Predicting...")
     pred, prob_same = predict(text1, text2, model, scaler, feature_cols)
