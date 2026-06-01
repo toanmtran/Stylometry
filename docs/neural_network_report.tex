@@ -1,0 +1,395 @@
+% !TEX program = pdflatex
+% Compile from docs/ so that "../outputs/..." paths resolve.
+\documentclass[11pt]{article}
+
+% ── Layout ────────────────────────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{float}           % [H] float specifier
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+
+% ── Fonts ─────────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{newtxtext}
+\usepackage[scaled=0.92]{inconsolata}
+
+% ── Math / symbols ────────────────────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ── Graphics, color, tables ───────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Boxes for callouts ────────────────────────────────────────────────────────
+\usepackage[most]{tcolorbox}
+
+% ── Hyperlinks ────────────────────────────────────────────────────────────────
+\usepackage{hyperref}
+
+% ── Color palette ─────────────────────────────────────────────────────────────
+\definecolor{accent}{HTML}{2E5A88}        % deep blue
+\definecolor{accentred}{HTML}{C44E52}     % warm red (diagram highlights)
+\definecolor{softgray}{HTML}{F5F5F7}      % callout background
+\definecolor{rule}{HTML}{B7C2D0}          % thin separator
+\definecolor{codebg}{HTML}{F2F4F7}        % inline code background
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\color{accent}\Large\bfseries\sffamily}
+  {\thesection}{0.6em}{}
+  [\vspace{-2pt}{\color{rule}\titlerule[0.6pt]}]
+\titleformat{\subsection}
+  {\color{accent}\large\bfseries\sffamily}
+  {\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+% ── Caption styling ───────────────────────────────────────────────────────────
+\captionsetup{font=small, labelfont={bf,color=accent}, skip=4pt}
+
+% ── Hyperref styling ──────────────────────────────────────────────────────────
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, citecolor=accent}
+
+% ── Inline code ───────────────────────────────────────────────────────────────
+\newcommand{\code}[1]{%
+  \tcbox[on line, colback=codebg, colframe=codebg,
+         boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt]
+        {\ttfamily\small #1}}
+
+% ── Callout box ───────────────────────────────────────────────────────────────
+\newtcolorbox{keybox}[1][]{
+  enhanced, breakable,
+  colback=softgray, colframe=accent,
+  boxrule=0pt, leftrule=3pt,
+  arc=2pt, left=10pt, right=10pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\sffamily\color{accent},
+  #1
+}
+
+% ── Title block ───────────────────────────────────────────────────────────────
+\title{\vspace{-2.0em}{\color{accent}\textsf{\bfseries A Neural Network for Authorship Stylometry}}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3.0em}
+
+\noindent
+\textit{Given a passage written by one of $K$ known authors, can we recover who
+wrote it from writing style alone? Where K-means asked whether style
+\emph{clusters}, here we ask a supervised question: train a multi-layer
+perceptron on labelled passages and let it learn the decision boundaries
+between authors directly.}
+
+% =============================================================================
+\section{Classifying Five Authors with an MLP}
+
+\paragraph{Dataset and preprocessing.}
+We use five LessWrong authors --- \code{Eliezer Yudkowsky}, \code{John
+Wentworth}, \code{Raemon}, \code{Scott Alexander}, and \code{Zvi} --- with
+roughly 150 passages each, for \textbf{723 labelled passages} in total. From
+each passage we extract the same \textbf{107 stylometric features} used
+throughout this project, spanning seven groups: word/sentence-length
+statistics, vocabulary richness (type-token ratio, hapax ratio, Yule~$K$,
+Simpson~$D$, Brun\'et~$W$, Honor\'e~$R$), function-word frequencies, stylistic
+word-category rates, punctuation rates, coarse POS-tag distributions, and
+character-level ratios. None of these depend on \emph{what} a passage is about,
+only on \emph{how} it is written.
+
+Every feature is z-scored with \code{sklearn}'s \code{StandardScaler} (mean 0,
+standard deviation 1) before training. Crucially, the scaler is fit on the
+training split only and then applied to the dev and test splits, so no test-set
+statistics leak into training.
+
+\paragraph{The classifier.}
+A multi-layer perceptron (MLP) maps a feature vector
+$\mathbf{x}\in\mathbb{R}^{107}$ to a probability over the $K$ authors. Each
+hidden layer applies an affine transform followed by the \textbf{ReLU}
+nonlinearity,
+\[
+  \mathbf{h}^{(\ell)} = \mathrm{ReLU}\!\big(W^{(\ell)}\mathbf{h}^{(\ell-1)}
+  + \mathbf{b}^{(\ell)}\big),
+  \qquad \mathrm{ReLU}(z)=\max(0,z),
+\]
+with $\mathbf{h}^{(0)}=\mathbf{x}$. The final layer produces $K$ logits that a
+\textbf{softmax} turns into class probabilities,
+\[
+  p_k(\mathbf{x}) = \frac{\exp(z_k)}{\sum_{j=1}^{K}\exp(z_j)},
+\]
+and training minimises the multi-class \textbf{cross-entropy} loss over the
+training passages,
+\[
+  L = -\frac{1}{N}\sum_{i=1}^{N}\sum_{k=1}^{K}
+      \mathbf{1}[y_i = k]\,\log p_k(\mathbf{x}_i).
+\]
+Weights are learned by backpropagation with the \textbf{Adam} optimiser
+(\code{sklearn.neural\_network.MLPClassifier}, \code{solver="adam"}). All hidden
+layers use 64 units; we vary only the \emph{number} of such layers.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=10mm,
+  layer/.style={draw=accent, fill=accent!10, rounded corners=3pt,
+    minimum width=2.6cm, minimum height=0.9cm, align=center,
+    font=\small\sffamily\bfseries, thick},
+  outlayer/.style={draw=accentred, fill=accentred!9, rounded corners=3pt,
+    minimum width=2.6cm, minimum height=0.9cm, align=center,
+    font=\small\sffamily\bfseries, thick},
+  arr/.style={->, >=Stealth, accent, thick},
+]
+  \node[layer]    (in)  {Input\\$\mathbf{x}\in\mathbb{R}^{107}$};
+  \node[layer, right=of in]  (h) {Hidden\\$64$ units, ReLU};
+  \node[outlayer, right=of h] (out) {Softmax\\$K$ authors};
+  \node[draw=none, right=8mm of out, font=\small\sffamily, align=center]
+    (p) {$p_1,\dots,p_K$\\\footnotesize argmax = prediction};
+  \draw[arr] (in)  -- (h);
+  \draw[arr] (h)   -- (out);
+  \draw[arr] (out) -- (p);
+\end{tikzpicture}
+\caption{The winning architecture: a single hidden layer of 64 ReLU units
+feeding a $K$-way softmax. Deeper variants stack more 64-unit layers between
+input and output (Section~\ref{sec:depth}).}
+\label{fig:arch}
+\end{figure}
+
+\paragraph{Training protocol.}
+We split the 723 passages \textbf{60/20/20} (train / dev / test), stratified by
+author, and use the dev split to choose a model before ever touching the test
+split. Specifically we grid-search over three feature subsets (the top 30, top
+50, and all 107 features, ranked by a univariate filter) crossed with four
+network depths, training each combination on the train split and scoring it on
+dev. The winner is then \textbf{retrained on train$+$dev combined} and evaluated
+\emph{once} on the held-out test set.
+
+\begin{keybox}[title=Why early stopping?]
+With only $\sim$430 training passages and thousands of weights, an MLP can
+memorise the training set. We pass \code{early\_stopping=True}: \code{sklearn}
+holds out 10\% of the training data as an internal validation set and halts when
+its score fails to improve for \code{n\_iter\_no\_change=15} consecutive epochs
+(\code{batch\_size=32}, \code{max\_iter=500}). This curbs over-fitting and makes
+the depth comparison fair --- every architecture is trained under the same
+stopping rule.
+\end{keybox}
+
+\paragraph{Model selection on the dev set.}
+Figure~\ref{fig:dev5} shows dev accuracy for every feature-subset $\times$ depth
+combination. The clear winner is \textbf{all 107 features with a single hidden
+layer} (dev accuracy $0.903$). Two patterns already stand out: using all 107
+features never hurts, and the deepest network (50 layers) collapses to chance
+--- a phenomenon we return to in Section~\ref{sec:depth}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\linewidth]{../outputs/neural_network/dev_selection_5class.png}
+  \caption{Dev accuracy for the 5-class MLP across feature subsets (rows) and
+  network depths (columns). The starred cell --- all 107 features, depth 1 --- is
+  the selected model. Depth 50 sits at $0.207$, barely above the
+  five-class random baseline of $0.20$.}
+  \label{fig:dev5}
+\end{figure}
+
+\paragraph{Results.}
+Retrained on train$+$dev (578 passages) and evaluated on the 145 test passages,
+the selected model attains the scores in Table~\ref{tab:test5}.
+
+\begin{table}[H]
+\centering
+\caption{Test-set performance of the selected 5-class MLP (all 107 features,
+depth 1).}
+\label{tab:test5}
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Accuracy            & $0.931$ \\
+Weighted F1         & $0.930$ \\
+ROC-AUC (macro OvR) & $0.995$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The confusion matrix (Figure~\ref{fig:cm5}) shows a strong diagonal. \code{Zvi}
+and \code{Eliezer Yudkowsky} are recovered almost perfectly (recall $1.00$),
+while the few errors concentrate on \code{Scott Alexander} (recall $0.80$),
+whose passages are occasionally mistaken for \code{Raemon}. The ROC curves
+(Figure~\ref{fig:roc5}) sit in the top-left corner for every author, with a
+macro-averaged AUC of $0.995$: the model's ranking of ``how likely is this
+author'' is near-perfect even where its hard \code{argmax} decision slips.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.46\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../outputs/neural_network/confusion_5class.png}
+    \caption{Confusion matrix (rows = actual, columns = predicted).}
+    \label{fig:cm5}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.52\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../outputs/neural_network/roc_5class.png}
+    \caption{One-vs-rest ROC curves with macro average.}
+    \label{fig:roc5}
+  \end{subfigure}
+  \caption{Test-set diagnostics for the 5-class MLP.}
+  \label{fig:diag5}
+\end{figure}
+
+% =============================================================================
+\section{How Deep Should the Network Be?}
+\label{sec:depth}
+
+A natural instinct is that deeper networks are more powerful, so they should
+classify better. Our grid search says otherwise. Figure~\ref{fig:depth} plots
+dev accuracy against depth for each feature subset, on both the 5-class and the
+6-class task of Section~\ref{sec:openset}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/depth_effect.png}
+  \caption{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log
+  scale). Performance is flat-to-slightly-declining from depth 1 to depth 10,
+  then \textbf{collapses to chance at depth 50} on both tasks.}
+  \label{fig:depth}
+\end{figure}
+
+From depth 1 to depth 10 accuracy barely moves --- the extra layers buy nothing
+because the decision boundaries between these authors are already well within
+reach of a shallow network on 107 informative features. At depth 50 every
+configuration collapses: dev accuracy falls to $0.207$ (5-class) and $0.171$
+(6-class), essentially the random baselines of $1/5=0.20$ and $1/6=0.167$. The
+network has stopped learning anything.
+
+\begin{keybox}[title=Why the deep network fails]
+This is not over-fitting --- an over-fit network would still score well above
+chance on dev. It is an \emph{optimisation} failure. Stacking 50 plain
+fully-connected ReLU layers with no residual connections or normalisation
+produces vanishing gradients: the error signal is attenuated layer by layer
+during backpropagation, so the early layers receive almost no useful gradient.
+Combined with early stopping on a small dataset, training halts before the
+network escapes its near-random initialisation. The lesson is concrete: for
+tabular stylometric features, \textbf{a shallow MLP is not just sufficient but
+preferable}.
+\end{keybox}
+
+% =============================================================================
+\section{Open-Set Recognition: the ``None of the Above'' Problem}
+\label{sec:openset}
+
+The 5-class model assumes every passage was written by one of the five known
+authors. In the real world that assumption fails: a passage may come from a
+\emph{sixth}, unknown author, and a closed-set classifier will confidently
+mislabel it as whichever of the five it resembles most. Can the network learn to
+say ``none of these''?
+
+\paragraph{Constructing a ``none'' class.}
+We add a sixth class, \code{none\_of\_the\_5\_authors}, built from
+\textbf{15 other LessWrong authors} not among the five
+(\code{ricraz}, \code{benquo}, \code{abramdemski}, \code{sarahconstantin},
+\code{holdenkarnofsky}, \code{gordon-seidoh-worley}, \code{screwtape},
+\code{buck}, \code{turntrout}, \code{nunosempere}, \code{benito},
+\code{petermccluskey}, \code{joe-carlsmith}, \code{adamshimi}, \code{tsvibt}),
+sampling 10 articles from each for \textbf{150 ``none'' passages}. Merged with
+the five known authors this gives \textbf{873 passages over 6 classes}. The
+training protocol is otherwise identical to Section~1.
+
+\paragraph{Results.}
+Dev-set model selection again picks \textbf{all 107 features with a single
+hidden layer} (dev accuracy $0.943$; Figure~\ref{fig:dev6}). Retrained on
+train$+$dev (698 passages) and evaluated on 175 test passages, it scores as
+shown in Table~\ref{tab:test6} --- \emph{higher} than the closed-set 5-class
+model on every metric.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\linewidth]{../outputs/neural_network/dev_selection_6class.png}
+  \caption{Dev accuracy for the 6-class (open-set) MLP. The selected model is
+  again all 107 features at depth 1, and depth 50 again collapses to the
+  six-class random baseline of $0.167$.}
+  \label{fig:dev6}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Test-set performance of the selected 6-class MLP (all 107 features,
+depth 1).}
+\label{tab:test6}
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Accuracy            & $0.949$ \\
+Weighted F1         & $0.949$ \\
+ROC-AUC (macro OvR) & $0.996$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The striking result is the \code{none\_of\_the\_5\_authors} class itself:
+\textbf{precision, recall, and F1 are all $1.00$} (Figure~\ref{fig:cm6}). Not a
+single unknown-author passage is misattributed to one of the five, and not a
+single known-author passage is dumped into the ``none'' bin. The 15 unknown
+authors, pooled together, occupy a region of style-space that is cleanly
+separable from the five targets.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.50\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../outputs/neural_network/confusion_6class.png}
+    \caption{Confusion matrix. The \code{none} row and column are perfectly
+    isolated.}
+    \label{fig:cm6}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../outputs/neural_network/roc_6class.png}
+    \caption{One-vs-rest ROC curves with macro average.}
+    \label{fig:roc6}
+  \end{subfigure}
+  \caption{Test-set diagnostics for the 6-class open-set MLP.}
+  \label{fig:diag6}
+\end{figure}
+
+\begin{keybox}[title=Direct training beats indirect thresholding]
+Why add a class instead of simply flagging low-confidence predictions from the
+5-class model as ``unknown''? We tried that indirect route, thresholding the
+5-class softmax probabilities, and it failed completely: unknown passages
+routinely produced \emph{high}-confidence predictions for one of the five
+authors, so a confidence threshold caught essentially none of them. Giving the
+network labelled ``none'' examples and letting it learn the boundary directly is
+far more effective --- here, perfectly so.
+\end{keybox}
+
+\paragraph{Why does adding a class \emph{help}?}
+Counter-intuitively, the 6-class model out-performs the 5-class one
+($0.949$ vs.\ $0.931$ accuracy). Two factors contribute. First, the perfectly
+separable \code{none} class adds 30 easy test passages, lifting the average.
+Second, and more interestingly, the contrast against 15 stylistically diverse
+``other'' authors appears to sharpen the boundaries among the five targets
+rather than blur them: the model learns not just what each target author looks
+like, but what they do \emph{not} look like.
+
+% =============================================================================
+\section{Conclusion}
+
+A deliberately simple model --- a single hidden layer of 64 ReLU units on 107
+z-scored stylometric features --- attributes LessWrong passages to their author
+with $93\%$ accuracy across five authors and $95\%$ across six, the sixth being
+an open-set ``none of the above'' class it recognises perfectly. Depth does not
+help and, past a point, destroys the model outright. The supervised picture is
+sharper than the unsupervised one: where K-means recovered ten-author structure
+at ARI~$\approx 0.55$, a labelled MLP separates a handful of authors almost
+cleanly, confirming that the stylistic signal is strong and largely
+linearly-accessible once the right features are in hand.
+
+\end{document}
