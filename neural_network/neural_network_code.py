@@ -1,19 +1,15 @@
 """
-MLP Authorship Classifier — Dev/Test Evaluation
+MLP Authorship Classifier — Dev/Test Evaluation (Without Outliers)
 
-Workflow (run independently for each case):
-  1. Split data 60 / 20 / 20  (train / dev / test), stratified by author.
-  2. Train every (feature-subset × depth) combination on the train split.
-  3. Select the best combination by dev accuracy.
-  4. Retrain the winner on train+dev.
-  5. Evaluate on the held-out test split (touched once per case).
-
-Cases:
-  - With outliers    → uses author_features_extracted_full.csv as-is
-  - Without outliers → applies per-author Isolation Forest before splitting
+Workflow:
+  1. Remove per-author outliers via Isolation Forest.
+  2. Split 60 / 20 / 20  (train / dev / test), stratified by author.
+  3. Train every (feature-subset x depth) combination on the train split.
+  4. Display dev accuracies as a table: rows = feature subsets, cols = depth.
+  5. Retrain the best combo on train+dev.
+  6. Evaluate on the held-out test split (touched once).
 """
 
-import argparse
 import os
 
 import matplotlib.pyplot as plt
@@ -49,21 +45,21 @@ FEATURE_RANKING = [
 
 NETWORK_CONFIGS: dict[str, tuple[int, ...]] = {
     "Depth 1 (64,)":      (64,),
-    "Depth 2 (64, 32)":   (64, 32),
     "Depth 3 (64,64,64)": (64, 64, 64),
     "Depth 10":           tuple([64] * 10),
     "Depth 50":           tuple([64] * 50),
 }
 
-FEATURE_SUBSETS = [15, 30, 50, 74]   # top-k from FEATURE_RANKING; 74 = full ranked set
-PATIENCE_VALUES = [5, 10, 15]         # n_iter_no_change for early stopping
+FEATURE_SUBSETS = [30, 50]        # top-k from FEATURE_RANKING
+PATIENCE        = 15              # n_iter_no_change for early stopping
+BATCH_SIZE      = 32
 METADATA_COLS   = {"author", "passage_id"}
 
-TRAIN_RATIO  = 0.60   # of total
-DEV_RATIO    = 0.20   # of total  → test_size=0.25 of the 80% traindev pool
-TEST_RATIO   = 0.20   # of total
+TRAIN_RATIO  = 0.60
+DEV_RATIO    = 0.20
+TEST_RATIO   = 0.20
 RANDOM_STATE = 42
-MAX_ITER     = 2000   # high ceiling; early stopping decides when to actually halt
+MAX_ITER     = 500
 
 
 # ==========================================
@@ -84,10 +80,7 @@ def get_ordered_features(df: pd.DataFrame) -> list[str]:
     return [f for f in FEATURE_RANKING if f in available]
 
 
-def make_eval_tasks(
-    df: pd.DataFrame, ordered: list[str]
-) -> list[tuple[str, list[str]]]:
-    """Return (label, column_list) pairs for each feature subset."""
+def make_eval_tasks(df: pd.DataFrame, ordered: list[str]) -> list[tuple[str, list[str]]]:
     all_cols = [c for c in df.columns if c not in METADATA_COLS]
     tasks = [(f"Top {k} features", ordered[:k]) for k in FEATURE_SUBSETS]
     tasks.append((f"All {len(all_cols)} features", all_cols))
@@ -105,14 +98,12 @@ def plot_roc_curves(
     y_bin = label_binarize(y_true, classes=list(range(n_classes)))
 
     fig, ax = plt.subplots(figsize=(8, 6))
-
     fpr_all, tpr_all = {}, {}
     for i, name in enumerate(class_names):
         fpr, tpr, _ = roc_curve(y_bin[:, i], y_prob[:, i])
         fpr_all[i], tpr_all[i] = fpr, tpr
         ax.plot(fpr, tpr, lw=1.5, label=f"{name}  (AUC={auc(fpr, tpr):.3f})")
 
-    # Macro-average curve
     all_fpr = np.unique(np.concatenate(list(fpr_all.values())))
     mean_tpr = np.mean(
         [np.interp(all_fpr, fpr_all[i], tpr_all[i]) for i in range(n_classes)], axis=0
@@ -132,19 +123,6 @@ def plot_roc_curves(
     plt.close()
 
 
-def compute_ece(y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
-    """Expected Calibration Error: confidence-accuracy gap weighted by bin size."""
-    confidences = y_prob.max(axis=1)
-    correct = (y_prob.argmax(axis=1) == y_true).astype(float)
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    ece = 0.0
-    for lo, hi in zip(bins[:-1], bins[1:]):
-        mask = (confidences > lo) & (confidences <= hi)
-        if mask.any():
-            ece += mask.mean() * abs(correct[mask].mean() - confidences[mask].mean())
-    return float(ece)
-
-
 def confusion_matrix_md(cm: np.ndarray, names: list[str]) -> str:
     short = [n[:14] for n in names]
     header = "| Actual \\ Pred | " + " | ".join(f"**{s}**" for s in short) + " |"
@@ -155,23 +133,43 @@ def confusion_matrix_md(cm: np.ndarray, names: list[str]) -> str:
     return "\n".join(rows) + "\n"
 
 
+def dev_table_md(selection_rows: list[dict], best: dict) -> str:
+    """2-D markdown table: rows = feature subsets, cols = architectures."""
+    subset_labels = list(dict.fromkeys(r["subset_label"] for r in selection_rows))
+    cfg_labels    = list(NETWORK_CONFIGS.keys())
+    grid = {(r["subset_label"], r["cfg_label"]): r["dev_acc"] for r in selection_rows}
+    best_key = (best["subset_label"], best["cfg_label"])
+
+    header = "| Feature Subset | " + " | ".join(cfg_labels) + " |"
+    sep    = "|---|" + "---|" * len(cfg_labels)
+    lines  = [header, sep]
+    for sub in subset_labels:
+        cells = []
+        for cfg in cfg_labels:
+            val    = grid.get((sub, cfg), float("nan"))
+            marker = " ✓" if (sub, cfg) == best_key else ""
+            cells.append(f"{val:.4f}{marker}")
+        lines.append("| " + sub + " | " + " | ".join(cells) + " |")
+    return "\n".join(lines) + "\n"
+
+
 # ==========================================
 # EXPERIMENT
 # ==========================================
-def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
+def run_experiment(df: pd.DataFrame, plot_path: str, case_label: str = "Without Outliers") -> str:
     le = LabelEncoder()
     y  = le.fit_transform(df["author"])
     ordered = get_ordered_features(df)
     tasks   = make_eval_tasks(df, ordered)
 
-    # ── 60 / 20 / 20 stratified split ──────────────────────────────────────
+    # 60 / 20 / 20 stratified split
     idx = np.arange(len(df))
     idx_traindev, idx_test, y_traindev, y_test = train_test_split(
         idx, y, test_size=TEST_RATIO, stratify=y, random_state=RANDOM_STATE
     )
     idx_train, idx_dev, y_train, y_dev = train_test_split(
         idx_traindev, y_traindev,
-        test_size=DEV_RATIO / (TRAIN_RATIO + DEV_RATIO),   # 0.25 of 80% = 20%
+        test_size=DEV_RATIO / (TRAIN_RATIO + DEV_RATIO),
         stratify=y_traindev, random_state=RANDOM_STATE,
     )
 
@@ -186,9 +184,8 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
     print(f"  Total={n_total}  Train={n_train}  Dev={n_dev}  Test={n_test}")
     print(f"{'='*60}")
 
-    # ── Dev-set model selection ─────────────────────────────────────────────
+    # Dev-set model selection
     selection_rows: list[dict] = []
-
     for subset_label, cols in tasks:
         X_all_sub = df[cols].values
         scaler    = StandardScaler()
@@ -196,36 +193,32 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
         X_dev_s   = scaler.transform(X_all_sub[idx_dev])
 
         for cfg_label, cfg in NETWORK_CONFIGS.items():
-            for patience in PATIENCE_VALUES:
-                print(f"  [DEV]  {subset_label:20s}  {cfg_label}  patience={patience}")
-                clf = MLPClassifier(
-                    hidden_layer_sizes=cfg,
-                    max_iter=MAX_ITER,
-                    random_state=RANDOM_STATE,
-                    solver="adam",
-                    early_stopping=True,
-                    n_iter_no_change=patience,
-                )
-                clf.fit(X_train_s, y_train)
+            print(f"  [DEV]  {subset_label:20s}  {cfg_label}  patience={PATIENCE}")
+            clf = MLPClassifier(
+                hidden_layer_sizes=cfg,
+                max_iter=MAX_ITER,
+                batch_size=BATCH_SIZE,
+                random_state=RANDOM_STATE,
+                solver="adam",
+                early_stopping=True,
+                n_iter_no_change=PATIENCE,
+            )
+            clf.fit(X_train_s, y_train)
+            selection_rows.append({
+                "subset_label": subset_label,
+                "cols":         cols,
+                "cfg_label":    cfg_label,
+                "cfg":          cfg,
+                "train_acc":    clf.score(X_train_s, y_train),
+                "dev_acc":      clf.score(X_dev_s,   y_dev),
+            })
 
-                selection_rows.append({
-                    "subset_label": subset_label,
-                    "cols":         cols,
-                    "cfg_label":    cfg_label,
-                    "cfg":          cfg,
-                    "patience":     patience,
-                    "train_acc":    clf.score(X_train_s, y_train),
-                    "dev_acc":      clf.score(X_dev_s,   y_dev),
-                })
-
-    # Sort by dev accuracy descending
     selection_rows.sort(key=lambda r: r["dev_acc"], reverse=True)
     best = selection_rows[0]
+    print(f"\n  Best on dev: {best['subset_label']} | {best['cfg_label']}"
+          f"  (dev={best['dev_acc']:.4f})")
 
-    print(f"\n  Best on dev: {best['subset_label']} | {best['cfg_label']} | "
-          f"patience={best['patience']}  (dev={best['dev_acc']:.4f})")
-
-    # ── Retrain winner on train+dev, evaluate on test ───────────────────────
+    # Retrain winner on train+dev, evaluate on test
     print(f"  Retraining on train+dev ({n_traindev} passages)...")
     X_best_sub   = df[best["cols"]].values
     scaler_final = StandardScaler()
@@ -235,10 +228,11 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
     final_clf = MLPClassifier(
         hidden_layer_sizes=best["cfg"],
         max_iter=MAX_ITER,
+        batch_size=BATCH_SIZE,
         random_state=RANDOM_STATE,
         solver="adam",
         early_stopping=True,
-        n_iter_no_change=best["patience"],
+        n_iter_no_change=PATIENCE,
     )
     final_clf.fit(X_traindev_s, y_traindev)
     y_pred_test = final_clf.predict(X_test_s)
@@ -251,26 +245,24 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
         output_dict=True,
         zero_division=0,
     )
-    test_df = pd.DataFrame(test_report).T
-    display_rows = list(le.classes_) + ["macro avg", "weighted avg"]
-    test_table = test_df.loc[display_rows]
+    test_df    = pd.DataFrame(test_report).T
+    display_rows_order = list(le.classes_) + ["macro avg", "weighted avg"]
+    test_table = test_df.loc[display_rows_order]
 
     roc_auc = roc_auc_score(y_test, y_prob_test, multi_class="ovr", average="macro")
-    ece     = compute_ece(y_test, y_prob_test)
     wf1     = test_report["weighted avg"]["f1-score"]
     cm      = confusion_matrix(y_test, y_pred_test)
 
     plot_roc_curves(
         y_test, y_prob_test, list(le.classes_),
-        title=f"ROC Curves — MLP ({case_label})",
+        title=f"ROC Curves - MLP ({case_label})",
         save_path=plot_path,
     )
-    print(f"  Test accuracy: {test_acc:.4f}  ROC-AUC: {roc_auc:.4f}  "
-          f"WF1: {wf1:.4f}  ECE: {ece:.4f}")
+    print(f"  Test accuracy: {test_acc:.4f}  ROC-AUC: {roc_auc:.4f}  WF1: {wf1:.4f}")
     print(test_table.to_string())
 
-    # ── Build markdown ──────────────────────────────────────────────────────
-    md  = f"# MLP Authorship Classification — {case_label}\n\n"
+    # Build markdown
+    md  = f"# MLP Authorship Classification - {case_label}\n\n"
 
     md += "## Data Split\n\n"
     md += "| Set | Passages | Proportion |\n"
@@ -280,19 +272,14 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
     md += f"| Test      | {n_test}     | {n_test/n_total:.0%}  |\n"
     md += f"| **Total** | **{n_total}**| 100%      |\n\n"
 
-    md += "## Dev Set — Model Selection\n\n"
-    md += ("All feature-subset × architecture combinations ranked by dev accuracy. "
-           "Best configuration is retrained on train+dev and evaluated on the test set.\n\n")
-    md += "| Rank | Feature Subset | Architecture | Patience | Train Acc | Dev Acc |\n"
-    md += "|------|----------------|-------------|----------|-----------|----------|\n"
-    for i, row in enumerate(selection_rows, 1):
-        marker = " ✓" if i == 1 else ""
-        md += (f"| {i} | {row['subset_label']} | {row['cfg_label']} "
-               f"| {row['patience']} "
-               f"| {row['train_acc']:.4f} | {row['dev_acc']:.4f}{marker} |\n")
-
-    md += (f"\n**Best model:** {best['subset_label']} · {best['cfg_label']} · "
-           f"patience={best['patience']} — Dev accuracy: **{best['dev_acc']:.4f}**\n\n")
+    md += "## Dev Set - Model Selection\n\n"
+    md += ("Dev accuracy for every feature-subset x architecture combination "
+           f"(patience={PATIENCE}, batch_size={BATCH_SIZE}). "
+           "Best cell marked with checkmark.\n\n")
+    md += dev_table_md(selection_rows, best)
+    md += "\n"
+    md += (f"**Best model:** {best['subset_label']} x {best['cfg_label']} "
+           f"- Dev accuracy: **{best['dev_acc']:.4f}**\n\n")
 
     md += "## Final Test Set Results\n\n"
     md += (f"Retrained on train+dev ({n_traindev} passages) using "
@@ -300,10 +287,9 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
 
     md += "### Key Metrics\n\n"
     md += "| Metric | Value |\n|--------|-------|\n"
-    md += f"| Accuracy       | {test_acc:.4f} |\n"
-    md += f"| Weighted F1    | {wf1:.4f} |\n"
-    md += f"| ROC-AUC (macro OvR) | {roc_auc:.4f} |\n"
-    md += f"| ECE            | {ece:.4f} |\n\n"
+    md += f"| Accuracy            | {test_acc:.4f} |\n"
+    md += f"| Weighted F1         | {wf1:.4f} |\n"
+    md += f"| ROC-AUC (macro OvR) | {roc_auc:.4f} |\n\n"
 
     md += "### Per-Class Report\n\n"
     md += test_table.to_markdown() + "\n\n"
@@ -321,37 +307,28 @@ def run_experiment(df: pd.DataFrame, case_label: str, plot_path: str) -> str:
 # ==========================================
 # MAIN
 # ==========================================
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="MLP authorship classifier — dev/test evaluation")
-    p.add_argument("--input", default="author_features_extracted_full.csv",
-                   help="Full feature CSV (default: author_features_extracted_full.csv)")
-    return p.parse_args()
-
-
 def main() -> None:
-    args = parse_args()
+    input_csv = "author_features_extracted_full.csv"
+    if not os.path.exists(input_csv):
+        raise FileNotFoundError(f"Input file not found: {input_csv}")
 
-    if not os.path.exists(args.input):
-        raise FileNotFoundError(f"Input file not found: {args.input}")
-
-    print(f"Loading {args.input}...")
-    df_full = pd.read_csv(args.input)
+    print(f"Loading {input_csv}...")
+    df_full = pd.read_csv(input_csv)
     print(f"  {len(df_full)} rows loaded")
 
-    print("\nRemoving outliers for second case...")
+    print("\nRemoving outliers...")
     df_clean = remove_outliers(df_full)
     print(f"  {len(df_full)} -> {len(df_clean)} rows after outlier removal")
 
-    cases = [
-        (df_full,  "With Outliers",    "results_with_outliers.md",    "roc_with_outliers.png"),
-        (df_clean, "Without Outliers", "results_without_outliers.md", "roc_without_outliers.png"),
-    ]
+    md_with = run_experiment(df_full, plot_path="roc_with_outliers.png", case_label="With Outliers")
+    with open("results_with_outliers.md", "w", encoding="utf-8") as f:
+        f.write(md_with)
+    print("\nSaved: results_with_outliers.md  |  roc_with_outliers.png")
 
-    for df, label, outfile, plotfile in cases:
-        md = run_experiment(df, label, plot_path=plotfile)
-        with open(outfile, "w", encoding="utf-8") as f:
-            f.write(md)
-        print(f"\nSaved: {outfile}  |  {plotfile}")
+    md_without = run_experiment(df_clean, plot_path="roc_without_outliers.png", case_label="Without Outliers")
+    with open("results_without_outliers.md", "w", encoding="utf-8") as f:
+        f.write(md_without)
+    print("\nSaved: results_without_outliers.md  |  roc_without_outliers.png")
 
 
 if __name__ == "__main__":
