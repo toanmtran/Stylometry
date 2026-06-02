@@ -57,7 +57,6 @@ def custom_grid_search(seed_path):
             # Store accuracy
             results[str(params)]['train'].append(train_acc)
             results[str(params)]['val'].append(val_acc)
-            # print(f"  + Params {params}: Val Acc = {val_acc:.4f}")
     
     for params_str, scores in results.items():
         val_scores = scores['val']
