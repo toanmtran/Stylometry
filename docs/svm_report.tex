@@ -1,0 +1,322 @@
+% !TEX program = pdflatex
+% Compile from the project root so that "outputs/..." paths resolve.
+\documentclass[11pt]{article}
+
+% ── Layout ────────────────────────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{float}           % [H] float specifier
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+
+% ── Fonts ─────────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{newtxtext}
+\usepackage[scaled=0.92]{inconsolata}
+
+% ── Math / symbols ────────────────────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ── Graphics, color, tables ───────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Boxes for callouts ────────────────────────────────────────────────────────
+\usepackage[most]{tcolorbox}
+
+% ── Hyperlinks ────────────────────────────────────────────────────────────────
+\usepackage{hyperref}
+
+% ── Color palette ─────────────────────────────────────────────────────────────
+\definecolor{accent}{HTML}{2E5A88}        % deep blue
+\definecolor{accentred}{HTML}{C44E52}     % warm red (diagram highlights)
+\definecolor{softgray}{HTML}{F5F5F7}      % callout background
+\definecolor{rule}{HTML}{B7C2D0}          % thin separator
+\definecolor{codebg}{HTML}{F2F4F7}        % inline code background
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\color{accent}\Large\bfseries\sffamily}
+  {\thesection}{0.6em}{}
+  [\vspace{-2pt}{\color{rule}\titlerule[0.6pt]}]
+\titleformat{\subsection}
+  {\color{accent}\large\bfseries\sffamily}
+  {\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+% ── Caption styling ───────────────────────────────────────────────────────────
+\captionsetup{font=small, labelfont={bf,color=accent}, skip=4pt}
+
+% ── Hyperref styling ──────────────────────────────────────────────────────────
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, citecolor=accent}
+
+% ── Inline code ───────────────────────────────────────────────────────────────
+\newcommand{\code}[1]{%
+  \tcbox[on line, colback=codebg, colframe=codebg,
+         boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt]
+        {\ttfamily\small #1}}
+
+% ── Callout box ───────────────────────────────────────────────────────────────
+\newtcolorbox{keybox}[1][]{
+  enhanced, breakable,
+  colback=softgray, colframe=accent,
+  boxrule=0pt, leftrule=3pt,
+  arc=2pt, left=10pt, right=10pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries\sffamily\color{accent},
+  #1
+}
+
+% ── Title block ───────────────────────────────────────────────────────────────
+\title{\vspace{-2.0em}{\color{accent}\textsf{\bfseries Author Verification Using Support Vector Machine}}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3.0em}
+
+\noindent
+\textit{Author verification (Same-author detection) is the task of determining whether two articles are written by the same author. Unlike traditional text classification, this problem focuses on analyzing the writing style rather than the topic or the meaning of the articles. In this problem, Support Vector Machine (SVM) was used to classify whether pairs of articles are written by the same author. The objective is to evaluate the effectiveness of SVM for this problem and analyze the impact of different hyperparameter settings on model performance.}
+
+% =============================================================================
+\section{Support Vector Machine}
+
+\subsection{Overview}
+
+Support Vector Machine (SVM) is a supervised machine learning algorithm widely used for classification tasks due to its strong generalization capability and effectiveness in high-dimensional feature spaces. The primary objective of SVM is to identify an optimal decision boundary, known as a hyperplane, that maximizes the margin. For non-linearly separable data, SVM uses kernel functions to project the original feature space into a higher-dimensional space where the discrimination becomes easier. In this project, the Radial Basis Function (RBF) kernel was utilized because of its ability to model complex non-linear relationships between stylometric features.
+
+\subsection{Radial Basis Function (RBF)}
+
+The Radial Basis Function (RBF) kernel is one of the most widely used kernel functions in Support Vector Machine models due to its ability to handle complex non-linear relationships. The RBF kernel is defined mathematically as:
+\[
+  K(x_{i},x_{j}) = \exp(-\gamma \lVert x_{i}-x_{j} \rVert^{2})
+\]
+Where $x_i, x_j$ are two feature vectors and $\lVert x_{i}-x_{j} \rVert^{2}$ represents the squared Euclidean distance between the two samples. 
+
+The RBF kernel computes the similarity between two feature vectors based on their distance in the feature space. When two samples are close together, the Euclidean distance becomes small, producing a kernel value (similarity) near 1. Conversely, when the samples are far apart, the kernel value (similarity) approaches 0.
+
+The performance of the non-linear SVM is heavily dependent on two critical hyperparameters:
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \textbf{\code{C}}: Controls the regularization. A lower \code{C} encourages a smoother, more generalized boundary, while a higher \code{C} penalizes misclassifications heavily, potentially leading to overfitting.
+  \item \textbf{\code{$\gamma$}}: Controls how far the influence of a sample extends in the feature 
+space.
+  \begin{itemize}\setlength\itemsep{1pt}
+      \item If \code{$\gamma$} is large, the similarity is diminished compared to the distance. Only samples located extremely close together are considered similar (near influence). This causes the model to create highly detailed and localized decision boundaries, increasing the risk of overfitting.
+      \item If \code{$\gamma$} is small, the similarity is exaggerated compared to the distance. As a result, even relatively far samples still exert influence on another one. This produces smoother decision boundaries with broader influence regions, improving generalization but potentially causing underfitting.
+  \end{itemize}
+\end{itemize}
+
+% =============================================================================
+\section{Data Preparation}
+
+\paragraph{Data Source.}
+The dataset was collected from LessWrong forum (\url{lesswrong.com}). It includes 1484 articles written by 35 distinct authors. The distribution of articles per author is showed in the following table:
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{@{}l r @{\hspace{4em}} l r@{}}
+    \toprule
+    \textbf{Author} & \textbf{Number of Articles} & \textbf{Author} & \textbf{Number of Articles} \\
+    \midrule
+    david-gross          & 50 & jasoncrawford   & 44 \\
+    screwtape            & 49 & raemon          & 43 \\
+    scottalexander       & 49 & buck            & 42 \\
+    sarahconstantin      & 49 & joe-carlsmith   & 42 \\
+    steve2152            & 48 & ruby            & 42 \\
+    adamshimi            & 48 & zack\_m\_davis  & 41 \\
+    kaj\_sotala          & 48 & so8res          & 40 \\
+    ricraz               & 47 & petermccluskey  & 40 \\
+    zvi                  & 47 & jacob-falkovich & 39 \\
+    jessica-liu-taylor   & 47 & holdenkarnofsky & 38 \\
+    katjagrace           & 47 & lukeprog        & 38 \\
+    tsvibt               & 47 & elizabeth-1     & 36 \\
+    benquo               & 46 & benito          & 34 \\
+    eliezer\_yudkowsky   & 46 & turntrout       & 33 \\
+    johnswentworth       & 46 & philh           & 29 \\
+    gordon-seidoh-worley & 46 & jan\_kulveit    & 27 \\
+    abramdemski          & 45 & nunosempere     & 27 \\
+    ryan\_greenblatt     & 44 &                 &    \\
+    \bottomrule
+  \end{tabular}
+  \caption{Distribution of articles per author in the dataset.}
+  \label{tab:author_distribution}
+\end{table}
+
+\paragraph{Data splitting.}
+If article pairs are randomly divided into training and test sets, articles belonging to the same author may appear in both sets. Therefore, the model will suffer from data leakage. To prevent this problem, the implementation performs an author-based split rather than an article-based split. We extract the set of all unique authors in the dataset. The array of unique authors then was divided such that 80\% of the authors (28 authors) were assigned to the training set, and the remaining 20\% (7 authors) were reserved for the test set. Consequently, the authors present in the test set were entirely disjoint from those in the training set.
+
+\paragraph{Article-Pairs Generation.}
+Because we consider author verification as a binary classification problem, the original dataset was transformed into a pairwise format. Consider two articles 1 and 2, let $f_1, f_2$ be the feature vectors extracted from article 1 and article 2 respectively. To provide the SVM a comprehensive representation of stylistic similarity and divergence, the final combined feature vector was concatenated using three distinct operations:
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \textbf{Absolute Difference} ($\lvert f_1 - f_2 \rvert$): It linearly captures the magnitude of stylistic differentiation between two articles, highlighting features where the authors' writing habits diverge. If two documents are written by the same author, we expect that many stylistic features should be similar.
+  \item \textbf{Squared Difference} ($(f_1-f_2)^2$): Squared difference is similar to absolute difference, but it emphasizes large differences more strongly. By amplifying mismatches between these features, the model can pay more attention to features that better distinguish between authors.
+  \item \textbf{Element-wise Multiplication} ($f_1 * f_2$): The element-wise multiplication can capture the similarity of specific writing habits. While the two distance metrics above cannot distinguish between ``both articles never use a feature'' and ``both articles use it frequently'', multiplication produces a remarkably high value only when both texts strongly exhibit the same trait, providing the model with a strong indicator of identical authorship.
+\end{itemize}
+
+The resulting pairwise dataset was strictly balanced, containing exactly 50\% positive pairs (labeled as 1) and 50\% negative pairs (labeled as 0). Positive pairs were generated by taking combinations of articles written by the same author. To prevent authors with a large number of articles from dominating the training distribution, a maximum threshold of 200 positive pairs per author was enforced. If an author's combinations exceed this limit, we utilize uniform random sampling to extract exactly 200 pairs. For negative pairs, two distinct authors are uniformly sampled from the author pool, and one document index is randomly selected for each of the two authors to make a pair, matching the total number of generated positive pairs.
+
+% =============================================================================
+\section{Hyperparameter Tuning}
+
+\paragraph{Pipeline.}
+In traditional machine learning workflows, hyperparameter tuning is typically executed using automated modules like Scikit-Learn’s GridSearchCV. However, applying standard grid search methods to pairwise authorship verification leads to data leakage. Because standard cross-validation splits data at the row level (based on pair), articles belonging to the same author may appear in both training and validation sets. This is the same problem with the one when we did data splitting. Therefore, we can solve this by using Grid-Search based on authors instead of articles. To discover the optimal \code{C} and \code{$\gamma$} configuration and ensure the model's generalizability, a three-step experimental pipeline using author-based splitting was implemented:
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \textbf{Author-Based K-Fold Cross-Validation}: The implementation performs a 5-fold cross validation strategy in which the splitting process is performed at the author level rather than at the articles or pair level. Articles written by the same author never appear simultaneously in both the training folds and the validation fold. More specifically, all unique authors are first divided into five mutually exclusive folds. Then in each iteration, 4 folds (80\% of the authors) were use for training set, while the remaining 1 fold (20\% of the authors) served as the validation set. This process is repeated five times so that each fold serves as the validation set exactly once.
+  \item \textbf{Fold-Wise Pair Generation and Feature Scaling}: Pair generation is performed inside the cross-validation loop rather than before dataset splitting. After pair generation, feature scaling is applied using \code{StandardScaler}:
+  \[
+    Z = \frac{x - \mu}{\sigma}
+  \]
+  where $\mu$ is the mean and $\sigma$ is the standard deviation. 
+  
+  The scaler is fitted only on the training set and then applied to the validation set.
+  \item \textbf{Grid Search}: Hyperparameter tuning was performed using an exhaustive grid search over multiple combinations of the SVM parameters \code{C} and \code{$\gamma$}. The search space for \code{C} is $[0.1, 1, 10]$ and \code{$\gamma$} is $[0.001, 0.01, 0.1]$. The entire pipeline was repeated 5 times using 5 different random seeds (Seeds 19 to 23) to improve robustness. The final configuration was chosen manually based on the accuracies on both traning and validation sets. 
+\end{itemize}
+
+\paragraph{Grid-Search Result.}
+The aggregated results, including Mean Training Accuracy, Mean Validation Accuracy, and the Generalization Gap (Train - Val), are summarized in Table~\ref{tab:gridsearch}.
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{@{}llcccl@{}}
+    \toprule
+    \textbf{C} & \textbf{gamma} & \textbf{Mean Train Acc} & \textbf{Mean Val Acc} & \textbf{Gap} & \textbf{Observation} \\
+    \midrule
+    0.1 & 0.001 & $0.7657\pm0.0047$ & $0.7284\pm0.0050$ & 0.0373 & Most Stable (Lowest Gap) \\
+    0.1 & 0.01  & $0.6909\pm0.0019$ & $0.6105\pm0.0081$ & 0.0804 & Underfitting \\
+    0.1 & 0.1   & $1.0000\pm0.0000$ & $0.5000\pm0.0000$ & 0.5000 & Overfitting \\
+    1   & 0.001 & $0.8398\pm0.0042$ & $0.7327\pm0.0072$ & 0.1070 & Highest Validation Accuracy \\
+    1   & 0.01  & $0.9954\pm0.0005$ & $0.6942\pm0.0073$ & 0.3012 & Overfitting \\
+    1   & 0.1   & $1.0000\pm0.0000$ & $0.5001\pm0.0003$ & 0.4999 & Overfitting \\
+    10  & 0.001 & $0.9585\pm0.0023$ & $0.7204\pm0.0052$ & 0.2380 & Overfitting \\
+    10  & 0.01  & $1.0000\pm0.0000$ & $0.6907\pm0.0061$ & 0.3093 & Overfitting \\
+    10  & 0.1   & $1.0000\pm0.0000$ & $0.5002\pm0.0004$ & 0.4998 & Overfitting \\
+    \bottomrule
+  \end{tabular}
+  \caption{SVM Hyperparameter Tuning Results (Aggregated across 5 Seeds).}
+  \label{tab:gridsearch}
+\end{table}
+
+Models using a large gamma value ($\gamma=0.1$) consistently achieved perfect training accuracy (100\%) across all seeds, while the validation accuracy remained at approximately 0.5. This behavior indicates severe overfitting. Similarly, configurations with large C values, especially C=10, also produced extremely high training accuracy. However, their validation performance were not high correspondingly. 
+
+Excluding the clearly overfitted and underfitted configurations, two candidate models remained for consideration:
+
+\begin{itemize}
+    \item \textbf{Configuration A ($C = 1$, $\gamma = 0.001$):} Mean Validation Accuracy = 73.27\%, Generalization Gap = 10.7\%.
+
+    \item \textbf{Configuration B ($C = 0.1$, $\gamma = 0.001$):} Mean Validation Accuracy = 72.84\%, Generalization Gap = 3.73\%.
+\end{itemize}
+
+Although Configuration A achieved the highest validation accuracy, Configuration B was selected for the final model due to its substantially smaller generalization gap. The reduction from 10.7\% to 3.73\% suggests improved robustness and better expected performance on unseen authors. Therefore, the slight decrease in validation accuracy (approximately 0.4 percentage points) was considered an acceptable trade-off for enhanced generalization capability.
+
+% =============================================================================
+\section{Final Model Evaluation}
+
+Following the hyperparameter optimization stage, the final Support Vector Machine (SVM) model was retrained using the complete training set. Pairs were generated by using all unique authors designated to the training set. A instance of \code{StandardScaler} was fitted exclusively on this training set. The SVM was then fitted on this fully scaled dataset.
+
+The model’s performance was evaluated across 5 seeds (Seeds 19 to 23), each containing 11200 training pairs and 2800 test pairs. The final performance was reported using multiple classification metrics, including Accuracy, Precision, Recall, F1-score, Confusion Matrix, and ROC-AUC in the Table~\ref{tab:finaleval} .
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Seed} & \textbf{Accuracy} & \textbf{Macro Precision} & \textbf{Macro Recall} & \textbf{Macro F1} & \textbf{ROC-AUC} \\
+    \midrule
+    19 & 0.7439 & 0.74 & 0.74 & 0.74 & 0.8234 \\
+    20 & 0.7350 & 0.74 & 0.73 & 0.73 & 0.8164 \\
+    21 & 0.6989 & 0.70 & 0.70 & 0.70 & 0.7823 \\
+    22 & 0.7393 & 0.75 & 0.74 & 0.74 & 0.8386 \\
+    23 & 0.7461 & 0.75 & 0.75 & 0.74 & 0.8086 \\
+    \midrule
+    \textbf{Mean $\pm$ Std} & \textbf{$0.7326\pm0.0189$} & \textbf{$0.7360\pm0.0207$} & \textbf{$0.7320\pm0.0205$} & \textbf{$0.7300\pm0.0187$} & \textbf{$0.8139\pm0.0186$} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Final Evaluation Metrics on Test Set (Over 5 Seeds).}
+  \label{tab:finaleval}
+\end{table}
+
+\paragraph{Performance.}
+The most significant observation from the experimental results is the consistently low standard deviation across all evaluation metrics. The Mean Accuracy reached 0.7326 with a standard deviation of 0.0189, while the Macro F1-score achieved 0.7300 with a standard deviation of 0.0187. Such low variability indicates that the model exhibits strong stability and generalization capability.
+
+Despite being evaluated on five completely different author splits, performance varied by only approximately 2\%. This suggests that the obtained results are not attributable to a favorable random split but rather reflect the model's ability to capture author-independent stylistic patterns that generalize effectively to unseen authors.
+
+Nevertheless, some variations between seeds remain observable. In particular, Seed 21 produced the lowest Accuracy and ROC-AUC values, indicating that the corresponding author split may contain more challenging writing styles or stylistically similar authors.
+
+Furthermore, the close agreement among Mean Accuracy (0.7326), Macro Precision (0.7360), Macro Recall (0.7320), and Macro F1-score (0.7300) demonstrates a balanced classification behavior. The absence of large discrepancies between these metrics suggests that the classifier does not exhibit a strong bias toward either class and maintains a favorable balance between precision and recall.
+
+\paragraph{Receiver Operating Characteristic (ROC).}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{outputs/svm/roc_curve.png}
+  \caption{Receiver Operating Characteristic (ROC) curves across 5 seeds.}
+  \label{fig:roccurve}
+\end{figure}
+
+To further evaluate the model’s discriminative ability on different threshold, the Receiver Operating Characteristic (ROC) curves were plotted for all 5 seeds.
+
+Among the evaluated splits, Seed 22 achieved the highest ROC-AUC score of 0.8386, indicating the strongest class separability. Conversely, Seed 21 obtained the lowest ROC-AUC score of 0.7823, suggesting that its corresponding author split presented a more challenging classification scenario.
+
+Despite these variations, the mean ROC-AUC score of 0.8139 demonstrates that the classifier consistently performs well above random chance. The ROC results further support the conclusion that the model effectively captures author-specific stylistic patterns and generalizes successfully to previously unseen authors.
+
+\paragraph{Confusion matrix.}
+To understand more about the model’s predictive behavior beyond aggregated metrics, 5 confusion matrices over 5 seeds and the average matrix were given in Table~\ref{tab:confmatrix}
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Actual \textbackslash Predicted} & \textbf{Different (0)} & \textbf{Same (1)} \\
+    \midrule
+    \textbf{Different (0)} & 1002.8 (TN) & 397.2 (FP) \\
+    \textbf{Same (1)} & 351.4 (FN) & 1048.6 (TP) \\
+    \bottomrule
+  \end{tabular}
+  \caption{Average Confusion Matrix over 5 seeds.}
+  \label{tab:confmatrix}
+\end{table}
+
+The average confusion matrices across the five experimental runs reveal that the SVM classifier achieves relatively balanced predictions between the “Same Author” and “Different Author” classes. In most cases, the numbers of true positives and true negatives remain reasonably high, indicating that the model can effectively distinguish stylistic similarities and differences between document pairs.
+
+The model registered an average of 397 False Positives per run. False Positives typically occur when two distinct authors share a same academic background, or strictly adhere to formal structural templates. This shared contextual vocabulary and syntactic rigidity cause their interaction vectors to artificially spike, tricking the SVM into perceiving a unified authorial signature.
+
+In contrast, the model produced an average of 351 False Negatives. This error highlights the inherent fluidity of human language. A single author may drastically change writing style depending on the target audience, the emotional context of the text, or chronological evolution over time. 
+
+\section{Comparison with Logistic Regression Baseline}
+
+To evaluate the complexity of the problem and verify the necessity of the non-linear transformation (via the RBF Kernel in SVM), we established a baseline model using the Logistic Regression (LR) algorithm. The model was trained using an L2 regularization with default value $C=1$ and underwent the exact same process across 5 random seeds (Seeds 19 to 23) to ensure an absolutely fair comparison.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\hline
+Metric & Logistic Regression & SVM \\
+\hline
+Accuracy & $72.21 \pm 2.11$ & $73.26 \pm 1.89$ \\
+Macro Precision & $72.80 \pm 2.39$ & $73.60 \pm 2.07$ \\
+Macro Recall & $72.20 \pm 2.05$ & $73.20 \pm 2.05$ \\
+Macro F1-score & $72.00 \pm 2.12$ & $73.00 \pm 1.87$ \\
+ROC-AUC & $79.38 \pm 2.89$ & $81.39 \pm 1.86$ \\
+\hline
+\end{tabular}
+\caption{Comparison between Logistic Regression and SVM}
+\label{tab:comparison_lr_svm}
+\end{table}
+
+Table \ref{tab:comparison_lr_svm} compares the performance between Logistic Regression and SVM. The results indicate that RBF-SVM achieves the highest scores across all evaluation metrics. In particular, the ROC-AUC improves from 79.38\% to 81.39\%, while Accuracy and Macro F1-score increase by approximately one percentage point.
+
+However, the performance gap between the two models is relatively small. Logistic Regression already achieves competitive results, suggesting that the extracted stylometric features provide a strong representation for the authorship verification task. The modest improvement obtained by SVM indicates that nonlinear relationships exist in the feature space, but they are not dominant. As a result, both linear and nonlinear classifiers are able to perform reasonably well on the dataset.
+
+From a practical perspective, Logistic Regression offers the advantages of simplicity and lower computational cost, whereas SVM provides slightly better predictive performance at the expense of increased model complexity. Therefore, while SVM is the better-performing model in this study, the results suggest that the choice between the two models should depend on whether predictive performance or model simplicity is the primary objective.
+
+\end{document}
