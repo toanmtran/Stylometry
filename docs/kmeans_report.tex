@@ -382,46 +382,33 @@ making K-means' task harder. To isolate the effect of $K$ from confounders,
 we must hold everything else fixed.
 
 \paragraph{Setup.}
-We use the \textit{LessWrong 25 Authors} dataset (25 authors, each with at
-least 27 articles of length $\geq 1{,}526$ words, most having $\geq 38$),
-fix $M=15$ articles per author and $N=1{,}526$ words, and sweep
-$K \in \{2, 4, 6, 8, 10, 12, 14, 16\}$. For each $K$ we run 50 trials:
-sample $K$ of the 25 authors at random (without replacement across trials),
+We use the \textit{LessWrong 35 Authors} dataset (35 authors, each with at
+least 27 articles of length $\geq 1{,}526$ words), fix $M=15$ articles per
+author and $N=1{,}526$ words, and sweep $K \in \{2, 4, 6, 8, 10, 12\}$. For
+each $K$ we run 100 trials: sample $K$ of the 35 authors at random,
 sample $M=15$ of each chosen author's articles, truncate to $N$ words,
 extract features, cluster with K-means++ (\code{n\_init=10}), record ARI.
-Because $\binom{25}{K}$ exceeds 50 at every $K$ by orders of magnitude, all
-50 trials per $K$ draw distinct author groups, so the results are not
-dominated by repeated author combinations.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_k/ari_vs_k.png}
-  \caption{ARI vs.\ $K$ on LessWrong 25 Authors ($M=15$, $N=1526$, 50 trials
-  per $K$). Mean ARI falls from $0.35$ at $K=2$ to $0.18$ at $K=16$, with
-  a notable uptick at $K=6$ ($0.31$) before resuming the downward trend.
-  The $K=2$ spread is very large (std $= 0.37$): some author pairs are
-  trivially separable (ARI $= 1.0$) while others are nearly indistinguishable
-  (ARI $\approx 0$).}
+  \caption{ARI vs.\ $K$ on LessWrong 35 Authors ($M=15$, $N=1526$, 100 trials
+  per $K$). Mean ARI falls monotonically from $0.65$ at $K=2$ to $0.31$ at
+  $K=12$. The spread shrinks rapidly with $K$.}
   \label{fig:k}
 \end{figure}
 
-The overall downward trend is clear: mean ARI falls from $0.35$ at $K=2$ to
-$0.18$ at $K=16$.  The trend is not strictly monotone, however --- mean ARI
-ticks up from $0.29$ at $K=4$ to $0.31$ at $K=6$ before declining again.
-This bump likely reflects sampling noise: with only 50 trials, a random
-cluster of easier-to-separate author groups can shift the mean by a few
-points.  Beyond $K=6$ the curve declines smoothly and the error bars shrink,
-indicating that at larger $K$ the variance across trials is driven less by
-which authors are drawn and more by the intrinsic difficulty of the task.
+The downward trend is clear and, on this larger author pool, essentially
+monotone: mean ARI falls from $0.65$ at $K=2$ to $0.54$ at $K=4$, $0.47$ at
+$K=6$, $0.38$ at $K=8$, $0.36$ at $K=10$, and $0.31$ at $K=12$. The slope
+is steepest at small $K$ and flattens out by $K=10$.
 
-The absolute ARI values here are lower than those reported for
-\textit{LessWrong 10 Authors} earlier in the report (which ranged from $0.60$
-at $K=2$ to $0.40$ at $K=10$).  The 10-author pool was a curated set chosen
-for having sufficient article counts; its authors may happen to have more
-stylistically distinct writing styles than a randomly drawn subset of 35.
-The broader 35-author pool better reflects the variety one would encounter in
-practice, and the lower ARI values confirm that style-based separation is
-genuinely harder when the author group is more diverse.
+The variance across trials also depends strongly on $K$. At $K=2$ the
+outcome is dominated by \emph{which} two authors are drawn: some pairs are
+near-trivial to separate and produce ARI close to 1.0, while others sit at
+chance. As $K$ grows, each trial draws a more representative slice of the
+author pool, the error bars shrink, and the spread is driven more by the
+intrinsic difficulty of the task than by author-group luck.
 
 % =============================================================================
 \section{Effect of Article Length ($N$)}
