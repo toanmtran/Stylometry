@@ -2,14 +2,14 @@ INFORMATION ABOUT THE LESSWRONG_LARGE DATA SET
 
 1. \raw: The raw data collected from lesswrong, containing data for 40 authors, each satisfying:
 
-* at least 30 articles  ≥ 2024
+* at least 30 articles.
 * Nominal length (pre-processing) of at least 1500 words
 
 2. \cleaned: The cleaned data for those authors from \raw
 
 The cleaning process involves:
 
-* Run scripts\clean_lesswrong_regular.py
+* Run scripts\clean_lesswrong_large.py
 * Surgically remove outliners and noisy articles using Claude
     Prompt: Please go through the [name] dataset (let's do 10 authors at a time) and surgically remove all articles that are interviews, talks, audio transcripts, articles written by multiple authors, articles where the supposed author is not an author but just a supervisor/adviser, articles with too much noisy content (code, quotes, dense math formulas) that would affect stylometry analysis.
 * Manually refine the articles (removing tags, headers, etc.)

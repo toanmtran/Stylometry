@@ -15,10 +15,10 @@ a downward trend here is evidence that, for this specific author pool,
 increasing the number of clusters itself degrades performance, independent
 of how much data each cluster sees.
 
-Dataset: LessWrong 25 Authors (lesswrong_large/cleaned_25) — 25 authors,
-each with at least 27 articles (most ≥38) of length ≥ 1526 words.
+Dataset: LessWrong 35 Authors (lesswrong_large/cleaned_35) — 35 authors,
+each with at least 27 articles of length ≥ 1526 words.
 The large author pool means every K in the sweep always has far more unique
-K-author groups than N_TRIALS, so all 50 trials per K draw distinct groups.
+K-author groups than N_TRIALS, so all 100 trials per K draw distinct groups.
 
 Each K uses its own independent RNG seeded by (GLOBAL_SEED, k). Adding
 or removing K values does not perturb the samples drawn for other K's.
@@ -184,7 +184,7 @@ def _print_summary(results: dict[int, list[float]], k_values: list[int]) -> None
 
 def main() -> None:
     print("Loading cleaned corpus …")
-    corpus = load_corpus("lesswrong_large", cleaned_dir="cleaned_25")
+    corpus = load_corpus("lesswrong_large", cleaned_dir="cleaned_35")
     corpus = (
         corpus.filter(min_words=MIN_WORDS)
               .equal_length_truncate(floor=MIN_WORDS)
@@ -222,7 +222,7 @@ def main() -> None:
         results, FIG_PATH,
         title=(
             f"K-means — Effects of No. of Authors (K)  "
-            f"(Lesswrong 25 Authors, articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
+            f"(Lesswrong 35 Authors, articles = {M_PER_AUTHOR}, length = {DOC_LENGTH})"
         ),
     )
     print(f"\nSaved -> {FIG_PATH.relative_to(_PROJECT_ROOT)}")
