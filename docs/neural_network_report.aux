@@ -3,6 +3,7 @@
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Classifying Five Authors with an MLP}{1}{section.1}\protected@file@percent }
+\newlabel{sec:fiveauthors}{{1}{1}{Classifying Five Authors with an MLP}{section.1}{}}
 \@writefile{toc}{\contentsline {paragraph}{Dataset and preprocessing.}{1}{section.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The classifier.}{1}{section.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The winning architecture: a single hidden layer of 64 ReLU units feeding a $K$-way softmax. Deeper variants stack more 64-unit layers between input and output (Section~\ref {sec:depth}).}}{1}{figure.caption.1}\protected@file@percent }
@@ -21,24 +22,35 @@
 \newlabel{sub@fig:roc5}{{b}{3}{One-vs-rest ROC curves with macro average}{figure.caption.4}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Test-set diagnostics for the 5-class MLP.}}{3}{figure.caption.4}\protected@file@percent }
 \newlabel{fig:diag5}{{3}{3}{Test-set diagnostics for the 5-class MLP}{figure.caption.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}How Deep Should the Network Be?}{3}{section.2}\protected@file@percent }
-\newlabel{sec:depth}{{2}{3}{How Deep Should the Network Be?}{section.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf  {collapses to chance at depth 50} on both tasks.}}{3}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:depth}{{4}{3}{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf {collapses to chance at depth 50} on both tasks}{figure.caption.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Open-Set Recognition: the ``None of the Above'' Problem}{4}{section.3}\protected@file@percent }
-\newlabel{sec:openset}{{3}{4}{Open-Set Recognition: the ``None of the Above'' Problem}{section.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Constructing a ``none'' class.}{4}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Results.}{4}{section.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$.}}{4}{figure.caption.6}\protected@file@percent }
-\newlabel{fig:dev6}{{5}{4}{Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$}{figure.caption.6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Test-set performance of the selected 6-class MLP (all 107 features, depth 1).}}{5}{table.caption.7}\protected@file@percent }
-\newlabel{tab:test6}{{2}{5}{Test-set performance of the selected 6-class MLP (all 107 features, depth 1)}{table.caption.7}{}}
-\newlabel{fig:cm6}{{6a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.8}{}}
-\newlabel{sub@fig:cm6}{{a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.8}{}}
-\newlabel{fig:roc6}{{6b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.8}{}}
-\newlabel{sub@fig:roc6}{{b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Test-set diagnostics for the 6-class open-set MLP.}}{5}{figure.caption.8}\protected@file@percent }
-\newlabel{fig:diag6}{{6}{5}{Test-set diagnostics for the 6-class open-set MLP}{figure.caption.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Why does adding a class \emph  {help}?}{5}{figure.caption.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Conclusion}{6}{section.4}\protected@file@percent }
-\gdef \@abspage@last{6}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Open-Set Recognition: the ``None of the Above'' Problem}{3}{section.2}\protected@file@percent }
+\newlabel{sec:openset}{{2}{3}{Open-Set Recognition: the ``None of the Above'' Problem}{section.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Constructing a ``none'' class.}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Results.}{3}{section.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$.}}{4}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:dev6}{{4}{4}{Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$}{figure.caption.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Test-set performance of the selected 6-class MLP (all 107 features, depth 1).}}{4}{table.caption.6}\protected@file@percent }
+\newlabel{tab:test6}{{2}{4}{Test-set performance of the selected 6-class MLP (all 107 features, depth 1)}{table.caption.6}{}}
+\newlabel{fig:cm6}{{5a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.7}{}}
+\newlabel{sub@fig:cm6}{{a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.7}{}}
+\newlabel{fig:roc6}{{5b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.7}{}}
+\newlabel{sub@fig:roc6}{{b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Test-set diagnostics for the 6-class open-set MLP.}}{5}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:diag6}{{5}{5}{Test-set diagnostics for the 6-class open-set MLP}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why does adding a class \emph  {help}?}{5}{figure.caption.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}How Deep Should the Network Be?}{5}{section.3}\protected@file@percent }
+\newlabel{sec:depth}{{3}{5}{How Deep Should the Network Be?}{section.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf  {collapses to chance at depth 50} on both tasks.}}{6}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:depth}{{6}{6}{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf {collapses to chance at depth 50} on both tasks}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}How Stable Is the Result Across Seeds?}{6}{section.4}\protected@file@percent }
+\newlabel{sec:seeds}{{4}{6}{How Stable Is the Result Across Seeds?}{section.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}}{7}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:seeds}{{7}{7}{Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class)}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{7}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Setup and Reproducibility}{7}{section.6}\protected@file@percent }
+\newlabel{sec:setup}{{6}{7}{Setup and Reproducibility}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dependencies.}{7}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Install.}{8}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Run the models.}{8}{lstnumber.-1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Regenerate the report figures.}{8}{lstnumber.-2.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compile this report.}{8}{lstnumber.-3.2}\protected@file@percent }
+\gdef \@abspage@last{8}

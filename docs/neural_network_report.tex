@@ -31,6 +31,9 @@
 % ── Boxes for callouts ────────────────────────────────────────────────────────
 \usepackage[most]{tcolorbox}
 
+% ── Code listings ─────────────────────────────────────────────────────────────
+\usepackage{listings}
+
 % ── Hyperlinks ────────────────────────────────────────────────────────────────
 \usepackage{hyperref}
 
@@ -64,6 +67,17 @@
          boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt]
         {\ttfamily\small #1}}
 
+% ── Listings style (shell commands) ───────────────────────────────────────────
+\lstdefinestyle{shell}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single, framerule=0.4pt, rulecolor=\color{rule},
+  xleftmargin=6pt, xrightmargin=6pt, framexleftmargin=6pt,
+  breaklines=true, columns=fullflexible, keepspaces=true,
+  showstringspaces=false, aboveskip=6pt, belowskip=6pt,
+  commentstyle=\color{accent}, morecomment=[l]{\#},
+}
+
 % ── Callout box ───────────────────────────────────────────────────────────────
 \newtcolorbox{keybox}[1][]{
   enhanced, breakable,
@@ -92,6 +106,7 @@ between authors directly.}
 
 % =============================================================================
 \section{Classifying Five Authors with an MLP}
+\label{sec:fiveauthors}
 
 \paragraph{Dataset and preprocessing.}
 We use five LessWrong authors --- \code{Eliezer Yudkowsky}, \code{John
@@ -245,43 +260,6 @@ author'' is near-perfect even where its hard \code{argmax} decision slips.
 \end{figure}
 
 % =============================================================================
-\section{How Deep Should the Network Be?}
-\label{sec:depth}
-
-A natural instinct is that deeper networks are more powerful, so they should
-classify better. Our grid search says otherwise. Figure~\ref{fig:depth} plots
-dev accuracy against depth for each feature subset, on both the 5-class and the
-6-class task of Section~\ref{sec:openset}.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/depth_effect.png}
-  \caption{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log
-  scale). Performance is flat-to-slightly-declining from depth 1 to depth 10,
-  then \textbf{collapses to chance at depth 50} on both tasks.}
-  \label{fig:depth}
-\end{figure}
-
-From depth 1 to depth 10 accuracy barely moves --- the extra layers buy nothing
-because the decision boundaries between these authors are already well within
-reach of a shallow network on 107 informative features. At depth 50 every
-configuration collapses: dev accuracy falls to $0.207$ (5-class) and $0.171$
-(6-class), essentially the random baselines of $1/5=0.20$ and $1/6=0.167$. The
-network has stopped learning anything.
-
-\begin{keybox}[title=Why the deep network fails]
-This is not over-fitting --- an over-fit network would still score well above
-chance on dev. It is an \emph{optimisation} failure. Stacking 50 plain
-fully-connected ReLU layers with no residual connections or normalisation
-produces vanishing gradients: the error signal is attenuated layer by layer
-during backpropagation, so the early layers receive almost no useful gradient.
-Combined with early stopping on a small dataset, training halts before the
-network escapes its near-random initialisation. The lesson is concrete: for
-tabular stylometric features, \textbf{a shallow MLP is not just sufficient but
-preferable}.
-\end{keybox}
-
-% =============================================================================
 \section{Open-Set Recognition: the ``None of the Above'' Problem}
 \label{sec:openset}
 
@@ -300,7 +278,7 @@ We add a sixth class, \code{none\_of\_the\_5\_authors}, built from
 \code{petermccluskey}, \code{joe-carlsmith}, \code{adamshimi}, \code{tsvibt}),
 sampling 10 articles from each for \textbf{150 ``none'' passages}. Merged with
 the five known authors this gives \textbf{873 passages over 6 classes}. The
-training protocol is otherwise identical to Section~1.
+training protocol is otherwise identical to Section~\ref{sec:fiveauthors}.
 
 \paragraph{Results.}
 Dev-set model selection again picks \textbf{all 107 features with a single
@@ -380,6 +358,78 @@ rather than blur them: the model learns not just what each target author looks
 like, but what they do \emph{not} look like.
 
 % =============================================================================
+\section{How Deep Should the Network Be?}
+\label{sec:depth}
+
+A natural instinct is that deeper networks are more powerful, so they should
+classify better. Our grid search says otherwise. Figure~\ref{fig:depth} plots
+dev accuracy against depth for each feature subset, on both the 5-class task of
+Section~\ref{sec:fiveauthors} and the 6-class task of Section~\ref{sec:openset}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/depth_effect.png}
+  \caption{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log
+  scale). Performance is flat-to-slightly-declining from depth 1 to depth 10,
+  then \textbf{collapses to chance at depth 50} on both tasks.}
+  \label{fig:depth}
+\end{figure}
+
+From depth 1 to depth 10 accuracy barely moves --- the extra layers buy nothing
+because the decision boundaries between these authors are already well within
+reach of a shallow network on 107 informative features. At depth 50 every
+configuration collapses: dev accuracy falls to $0.207$ (5-class) and $0.171$
+(6-class), essentially the random baselines of $1/5=0.20$ and $1/6=0.167$. The
+network has stopped learning anything.
+
+\begin{keybox}[title=Why the deep network fails]
+This is not over-fitting --- an over-fit network would still score well above
+chance on dev. It is an \emph{optimisation} failure. Stacking 50 plain
+fully-connected ReLU layers with no residual connections or normalisation
+produces vanishing gradients: the error signal is attenuated layer by layer
+during backpropagation, so the early layers receive almost no useful gradient.
+Combined with early stopping on a small dataset, training halts before the
+network escapes its near-random initialisation. The lesson is concrete: for
+tabular stylometric features, \textbf{a shallow MLP is not just sufficient but
+preferable}.
+\end{keybox}
+
+% =============================================================================
+\section{How Stable Is the Result Across Seeds?}
+\label{sec:seeds}
+
+A single train/test split with a single weight initialisation gives one number.
+Would we get the same accuracy if we reshuffled the split or re-initialised the
+network? Both depend on a random seed (\code{random\_state}), which fixes the
+stratified 80/20 train$+$dev / test partition and the starting weights. To
+gauge stability we retrain the selected configuration (all 107 features, depth
+1) under ten seeds, $(42, 100, 200, \ldots, 900)$, and record the test accuracy
+each time. The dataset itself --- including the fixed ``none'' class of
+Section~\ref{sec:openset} --- is held constant, so the spread reflects
+split-and-initialisation noise rather than which passages happen to be sampled.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/seed_stability.png}
+  \caption{Test accuracy of the selected MLP across ten seeds. The dashed line is
+  the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight:
+  $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}
+  \label{fig:seeds}
+\end{figure}
+
+Across the ten seeds the 5-class model averages \textbf{$0.931$} test accuracy
+(standard deviation $0.018$, range $0.890$--$0.959$), and the 6-class model
+averages \textbf{$0.943$} (standard deviation $0.015$, range
+$0.909$--$0.960$). Two things are reassuring. First, the headline numbers we
+reported with \code{random\_state=42} ($0.931$ and $0.949$) sit right at or just
+above their respective means --- they are representative runs, not lucky ones.
+Second, the 6-class spread is \emph{tighter} than the 5-class spread despite the
+extra class, consistent with the perfectly-separable ``none'' class anchoring
+the decision boundaries. Even the worst seed in either sweep stays near $0.89$,
+far above the random baselines, so the model's strong performance is a property
+of the features and architecture, not of one fortunate split.
+
+% =============================================================================
 \section{Conclusion}
 
 A deliberately simple model --- a single hidden layer of 64 ReLU units on 107
@@ -391,5 +441,62 @@ sharper than the unsupervised one: where K-means recovered ten-author structure
 at ARI~$\approx 0.55$, a labelled MLP separates a handful of authors almost
 cleanly, confirming that the stylistic signal is strong and largely
 linearly-accessible once the right features are in hand.
+
+% =============================================================================
+\section{Setup and Reproducibility}
+\label{sec:setup}
+
+All experiments run on CPU in well under a minute each. The code lives in two
+folders: \code{neural\_network/} (5-class) and \code{neural\_network\_6class/}
+(open-set 6-class). The report figures are produced by
+\code{neural\_network/make\_report\_figures.py}.
+
+\paragraph{Dependencies.}
+Python~$\geq 3.10$ with a handful of scientific packages:
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \code{numpy}, \code{pandas} --- data handling
+  \item \code{scikit-learn} --- \code{MLPClassifier}, splitting, scaling, metrics
+  \item \code{matplotlib} --- all figures
+  \item \code{nltk} --- tokenisation / POS-tagging when building the 6-class
+        ``none'' class from raw articles (a regex fallback is used if NLTK data
+        is unavailable)
+\end{itemize}
+
+\paragraph{Install.}
+\begin{lstlisting}[style=shell]
+# from the project root; a virtual environment is recommended
+python -m venv .venv
+.venv\Scripts\activate          # Windows  (use: source .venv/bin/activate on macOS/Linux)
+pip install numpy pandas scikit-learn matplotlib nltk
+\end{lstlisting}
+
+\paragraph{Run the models.}
+Each script trains the full feature-subset $\times$ depth grid, selects on the
+dev split, retrains the winner, and writes \code{results.md} plus \code{roc.png}
+next to itself.
+\begin{lstlisting}[style=shell]
+# 5-class MLP  ->  neural_network/results.md, roc.png
+cd neural_network
+python neural_network_code.py
+
+# 6-class open-set MLP  ->  neural_network_6class/results.md, roc.png
+cd ../neural_network_6class
+python neural_network_6class.py
+\end{lstlisting}
+
+\paragraph{Regenerate the report figures.}
+This reproduces every figure in this document --- dev-selection heatmaps, the
+depth-effect plot, confusion matrices, ROC curves, and the seed-stability
+sweep --- into \code{outputs/neural\_network/}.
+\begin{lstlisting}[style=shell]
+cd neural_network
+python make_report_figures.py
+\end{lstlisting}
+
+\paragraph{Compile this report.}
+\begin{lstlisting}[style=shell]
+cd docs
+pdflatex neural_network_report.tex   # run twice to resolve cross-references
+\end{lstlisting}
 
 \end{document}
