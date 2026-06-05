@@ -7,8 +7,9 @@ Extra class construction:
   - Sample N_ARTICLES_PER_NONE_AUTHOR (10) articles from each -> 150 total.
   - Extract stylometric features and label every article "none_of_the_5_authors".
   - Merge with the existing 5-author feature CSV.
-  - Remove per-author outliers via Isolation Forest.
   - Split 60/20/20, run dev-set model selection, evaluate on test set.
+
+Runs on the full feature matrix (no outlier removal). Writes results.md + roc.png.
 """
 
 import json
@@ -19,7 +20,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import IsolationForest
 from sklearn.metrics import (auc, classification_report, confusion_matrix,
                               roc_auc_score, roc_curve)
 from sklearn.model_selection import train_test_split
@@ -119,16 +119,6 @@ def build_none_class_df(seed: int = 42) -> tuple[pd.DataFrame, list[str]]:
 # ==========================================
 # DATA HELPERS
 # ==========================================
-def remove_outliers(df: pd.DataFrame) -> pd.DataFrame:
-    feature_cols = [c for c in df.columns if c not in METADATA_COLS]
-    kept = []
-    for _, group in df.groupby("author"):
-        clf = IsolationForest(contamination="auto", random_state=RANDOM_STATE)
-        mask = clf.fit_predict(group[feature_cols].values) == 1
-        kept.append(group[mask])
-    return pd.concat(kept).reset_index(drop=True)
-
-
 def get_ordered_features(df: pd.DataFrame) -> list[str]:
     available = set(df.columns) - METADATA_COLS
     return [f for f in FEATURE_RANKING if f in available]
@@ -210,7 +200,7 @@ def dev_table_md(selection_rows: list[dict], best: dict) -> str:
 # ==========================================
 # EXPERIMENT
 # ==========================================
-def run_experiment(df: pd.DataFrame, none_authors: list[str], plot_path: str, case_label: str = "Without Outliers") -> str:
+def run_experiment(df: pd.DataFrame, none_authors: list[str], plot_path: str) -> str:
     le = LabelEncoder()
     y  = le.fit_transform(df["author"])
     ordered = get_ordered_features(df)
@@ -234,7 +224,7 @@ def run_experiment(df: pd.DataFrame, none_authors: list[str], plot_path: str, ca
 
     none_total = int(df["author"].value_counts().get(NONE_LABEL, 0))
     print(f"\n{'='*60}")
-    print(f"  {case_label}")
+    print(f"  MLP 6-Class Authorship Classification")
     print(f"  Total={n_total}  Train={n_train}  Dev={n_dev}  Test={n_test}")
     print(f"  none_of_the_5_authors rows: {none_total}")
     print(f"{'='*60}")
@@ -311,14 +301,14 @@ def run_experiment(df: pd.DataFrame, none_authors: list[str], plot_path: str, ca
 
     plot_roc_curves(
         y_test, y_prob_test, list(le.classes_),
-        title=f"ROC Curves - MLP 6-class ({case_label})",
+        title="ROC Curves - MLP 6-class",
         save_path=plot_path,
     )
     print(f"  Test accuracy: {test_acc:.4f}  ROC-AUC: {roc_auc:.4f}  WF1: {wf1:.4f}")
     print(test_table.to_string())
 
     # Markdown
-    md  = f"# MLP 6-Class Authorship Classification - {case_label}\n\n"
+    md  = "# MLP 6-Class Authorship Classification\n\n"
 
     md += "## None-of-the-5-Authors Class Construction\n\n"
     md += (f"**{N_NONE_AUTHORS} authors x {N_ARTICLES_PER_NONE_AUTHOR} articles = "
@@ -400,23 +390,12 @@ def main() -> None:
     print(f"\nMerged dataset: {len(df_full)} rows, {len(df_full.columns)} columns")
     print(df_full["author"].value_counts().to_string())
 
-    print("\nRemoving outliers ...")
-    df_clean = remove_outliers(df_full)
-    print(f"  {len(df_full)} -> {len(df_clean)} rows after outlier removal")
-
     output_dir = Path(__file__).parent
-
-    plot_with = str(output_dir / "roc_with_outliers.png")
-    md_with   = run_experiment(df_full, none_authors, plot_path=plot_with, case_label="With Outliers")
-    out_with  = output_dir / "results_with_outliers.md"
-    out_with.write_text(md_with, encoding="utf-8")
-    print(f"\nSaved: {out_with}  |  {plot_with}")
-
-    plot_without = str(output_dir / "roc_without_outliers.png")
-    md_without   = run_experiment(df_clean, none_authors, plot_path=plot_without, case_label="Without Outliers")
-    out_without  = output_dir / "results_without_outliers.md"
-    out_without.write_text(md_without, encoding="utf-8")
-    print(f"\nSaved: {out_without}  |  {plot_without}")
+    plot_path  = str(output_dir / "roc.png")
+    md         = run_experiment(df_full, none_authors, plot_path=plot_path)
+    out_md     = output_dir / "results.md"
+    out_md.write_text(md, encoding="utf-8")
+    print(f"\nSaved: {out_md}  |  {plot_path}")
 
 
 if __name__ == "__main__":

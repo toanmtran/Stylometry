@@ -1,4 +1,4 @@
-# MLP Authorship Classification - With Outliers
+# MLP Authorship Classification
 
 ## Data Split
 
@@ -59,4 +59,4 @@ _Rows = actual, Columns = predicted._
 
 ## ROC Curves
 
-![ROC Curves](roc_with_outliers.png)
+![ROC Curves](roc.png)
