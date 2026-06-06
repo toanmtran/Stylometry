@@ -1,4 +1,4 @@
-# MLP 6-Class Authorship Classification - With Outliers
+# MLP 6-Class Authorship Classification
 
 ## None-of-the-5-Authors Class Construction
 
@@ -83,4 +83,4 @@ _Rows = actual, Columns = predicted._
 
 ## ROC Curves
 
-![ROC Curves](roc_with_outliers.png)
+![ROC Curves](roc.png)

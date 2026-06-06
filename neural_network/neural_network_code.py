@@ -1,13 +1,14 @@
 """
-MLP Authorship Classifier — Dev/Test Evaluation (Without Outliers)
+MLP Authorship Classifier — Dev/Test Evaluation
 
 Workflow:
-  1. Remove per-author outliers via Isolation Forest.
-  2. Split 60 / 20 / 20  (train / dev / test), stratified by author.
-  3. Train every (feature-subset x depth) combination on the train split.
-  4. Display dev accuracies as a table: rows = feature subsets, cols = depth.
-  5. Retrain the best combo on train+dev.
-  6. Evaluate on the held-out test split (touched once).
+  1. Split 60 / 20 / 20  (train / dev / test), stratified by author.
+  2. Train every (feature-subset x depth) combination on the train split.
+  3. Display dev accuracies as a table: rows = feature subsets, cols = depth.
+  4. Retrain the best combo on train+dev.
+  5. Evaluate on the held-out test split (touched once).
+
+Runs on the full feature matrix (no outlier removal). Writes results.md + roc.png.
 """
 
 import os
@@ -15,7 +16,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import IsolationForest
 from sklearn.metrics import (auc, classification_report, confusion_matrix,
                               roc_auc_score, roc_curve)
 from sklearn.model_selection import train_test_split
@@ -65,16 +65,6 @@ MAX_ITER     = 500
 # ==========================================
 # DATA HELPERS
 # ==========================================
-def remove_outliers(df: pd.DataFrame) -> pd.DataFrame:
-    feature_cols = [c for c in df.columns if c not in METADATA_COLS]
-    kept = []
-    for _, group in df.groupby("author"):
-        clf = IsolationForest(contamination="auto", random_state=RANDOM_STATE)
-        mask = clf.fit_predict(group[feature_cols].values) == 1
-        kept.append(group[mask])
-    return pd.concat(kept).reset_index(drop=True)
-
-
 def get_ordered_features(df: pd.DataFrame) -> list[str]:
     available = set(df.columns) - METADATA_COLS
     return [f for f in FEATURE_RANKING if f in available]
@@ -156,7 +146,7 @@ def dev_table_md(selection_rows: list[dict], best: dict) -> str:
 # ==========================================
 # EXPERIMENT
 # ==========================================
-def run_experiment(df: pd.DataFrame, plot_path: str, case_label: str = "Without Outliers") -> str:
+def run_experiment(df: pd.DataFrame, plot_path: str) -> str:
     le = LabelEncoder()
     y  = le.fit_transform(df["author"])
     ordered = get_ordered_features(df)
@@ -180,7 +170,7 @@ def run_experiment(df: pd.DataFrame, plot_path: str, case_label: str = "Without 
     n_traindev = len(idx_traindev)
 
     print(f"\n{'='*60}")
-    print(f"  {case_label}")
+    print(f"  MLP Authorship Classification")
     print(f"  Total={n_total}  Train={n_train}  Dev={n_dev}  Test={n_test}")
     print(f"{'='*60}")
 
@@ -255,14 +245,14 @@ def run_experiment(df: pd.DataFrame, plot_path: str, case_label: str = "Without 
 
     plot_roc_curves(
         y_test, y_prob_test, list(le.classes_),
-        title=f"ROC Curves - MLP ({case_label})",
+        title="ROC Curves - MLP",
         save_path=plot_path,
     )
     print(f"  Test accuracy: {test_acc:.4f}  ROC-AUC: {roc_auc:.4f}  WF1: {wf1:.4f}")
     print(test_table.to_string())
 
     # Build markdown
-    md  = f"# MLP Authorship Classification - {case_label}\n\n"
+    md  = "# MLP Authorship Classification\n\n"
 
     md += "## Data Split\n\n"
     md += "| Set | Passages | Proportion |\n"
@@ -316,19 +306,10 @@ def main() -> None:
     df_full = pd.read_csv(input_csv)
     print(f"  {len(df_full)} rows loaded")
 
-    print("\nRemoving outliers...")
-    df_clean = remove_outliers(df_full)
-    print(f"  {len(df_full)} -> {len(df_clean)} rows after outlier removal")
-
-    md_with = run_experiment(df_full, plot_path="roc_with_outliers.png", case_label="With Outliers")
-    with open("results_with_outliers.md", "w", encoding="utf-8") as f:
-        f.write(md_with)
-    print("\nSaved: results_with_outliers.md  |  roc_with_outliers.png")
-
-    md_without = run_experiment(df_clean, plot_path="roc_without_outliers.png", case_label="Without Outliers")
-    with open("results_without_outliers.md", "w", encoding="utf-8") as f:
-        f.write(md_without)
-    print("\nSaved: results_without_outliers.md  |  roc_without_outliers.png")
+    md = run_experiment(df_full, plot_path="roc.png")
+    with open("results.md", "w", encoding="utf-8") as f:
+        f.write(md)
+    print("\nSaved: results.md  |  roc.png")
 
 
 if __name__ == "__main__":

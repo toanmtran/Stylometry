@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from sklearn.metrics import (auc, classification_report, confusion_matrix,
-                             roc_auc_score, roc_curve)
+                             f1_score, roc_auc_score, roc_curve)
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler, label_binarize
@@ -73,6 +73,7 @@ PATIENCE        = 15
 BATCH_SIZE      = 32
 MAX_ITER        = 500
 RANDOM_STATE    = 42
+SEEDS           = [42, 100, 200, 300, 400, 500, 600, 700, 800, 900]
 METADATA_COLS   = {"author", "passage_id"}
 TRAIN_RATIO, DEV_RATIO, TEST_RATIO = 0.60, 0.20, 0.20
 
@@ -275,6 +276,57 @@ def plot_roc(res, title, path):
     plt.tight_layout(); plt.savefig(path, dpi=150); plt.close()
 
 
+# ── Seed stability ────────────────────────────────────────────────────────────
+def seed_stability(df, seeds):
+    """Retrain the selected config (all features, depth 1) under several seeds.
+
+    Each seed reseeds the 80/20 train+dev / test split AND the network weight
+    init, then we retrain on train+dev and score the held-out test split. The
+    dataset itself (including the 6-class ``none`` construction) is held fixed,
+    so the spread reflects model/split randomness, not which authors were drawn.
+    """
+    cols = [c for c in df.columns if c not in METADATA_COLS]
+    cfg  = NETWORK_CONFIGS["Depth 1"]
+    le = LabelEncoder()
+    y = le.fit_transform(df["author"])
+    idx = np.arange(len(df))
+    accs, wf1s = [], []
+    for seed in seeds:
+        idx_td, idx_te, y_td, y_te = train_test_split(
+            idx, y, test_size=TEST_RATIO, stratify=y, random_state=seed)
+        Xs = df[cols].values
+        sc = StandardScaler()
+        Xtd, Xte = sc.fit_transform(Xs[idx_td]), sc.transform(Xs[idx_te])
+        clf = MLPClassifier(hidden_layer_sizes=cfg, max_iter=MAX_ITER,
+                            batch_size=BATCH_SIZE, random_state=seed,
+                            solver="adam", early_stopping=True,
+                            n_iter_no_change=PATIENCE)
+        clf.fit(Xtd, y_td)
+        y_pred = clf.predict(Xte)
+        accs.append(clf.score(Xte, y_te))
+        wf1s.append(f1_score(y_te, y_pred, average="weighted"))
+    return np.array(accs), np.array(wf1s)
+
+
+def plot_seed_stability(seeds, acc5, acc6, path):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True)
+    for ax, accs, title in ((axes[0], acc5, "5-class"), (axes[1], acc6, "6-class")):
+        x = range(len(seeds))
+        mean, std = accs.mean(), accs.std()
+        ax.axhspan(mean - std, mean + std, color=ACCENT, alpha=0.12)
+        ax.axhline(mean, color=ACCENTRED, lw=1.6, ls="--",
+                   label=f"mean {mean:.3f} $\\pm$ {std:.3f}")
+        ax.scatter(x, accs, color=ACCENT, s=45, zorder=3)
+        ax.set_xticks(list(x), [str(s) for s in seeds], rotation=45, fontsize=8)
+        ax.set_xlabel("Seed (split + weight init)")
+        ax.set_title(title, color=ACCENT, fontweight="bold")
+        ax.grid(alpha=0.3, axis="y")
+        ax.legend(loc="lower right", fontsize=8)
+    axes[0].set_ylabel("Test accuracy")
+    axes[1].set_ylim(min(acc5.min(), acc6.min()) - 0.03, 1.0)
+    plt.tight_layout(); plt.savefig(path, dpi=150); plt.close()
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("Loading datasets (no outlier removal) ...")
@@ -291,7 +343,17 @@ def main():
     plot_confusion(res6, OUT / "confusion_6class.png")
     plot_roc(res5, "ROC Curves - 5-class MLP", OUT / "roc_5class.png")
     plot_roc(res6, "ROC Curves - 6-class MLP", OUT / "roc_6class.png")
-    print(f"\nSaved 7 figures to {OUT}")
+
+    print(f"\nSeed-stability sweep over {len(SEEDS)} seeds ...")
+    acc5, wf15 = seed_stability(df5, SEEDS)
+    acc6, wf16 = seed_stability(df6, SEEDS)
+    plot_seed_stability(SEEDS, acc5, acc6, OUT / "seed_stability.png")
+    print(f"  5-class test acc: mean={acc5.mean():.4f} std={acc5.std():.4f} "
+          f"min={acc5.min():.4f} max={acc5.max():.4f}")
+    print(f"  6-class test acc: mean={acc6.mean():.4f} std={acc6.std():.4f} "
+          f"min={acc6.min():.4f} max={acc6.max():.4f}")
+
+    print(f"\nSaved 8 figures to {OUT}")
 
 
 if __name__ == "__main__":
