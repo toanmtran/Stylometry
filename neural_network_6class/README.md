@@ -93,3 +93,9 @@ between the five targets.
 **Seed stability.** Across 10 seeds (split + weight init, none class fixed), test
 accuracy is **0.943 ± 0.015** (range 0.909–0.960) — tighter than the 5-class
 spread, anchored by the perfectly separable none class.
+
+**Depth.** As in the 5-class task, dev accuracy is flat from depth 1 to depth 10
+and collapses to the 1/6 ≈ 0.167 random baseline at depth 50. The shared
+vanishing-gradient diagnostic that explains this lives in
+[`../neural_network/gradient_diagnostics.py`](../neural_network/gradient_diagnostics.py)
+(see the report, §3).

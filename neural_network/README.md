@@ -41,6 +41,9 @@ python neural_network_code.py
 # Regenerate every report figure into outputs/neural_network/
 # (dev heatmaps, depth-effect, confusion matrices, ROC, seed-stability sweep)
 python make_report_figures.py
+
+# Gradient-health diagnostic -> outputs/neural_network/gradient_health.png
+python gradient_diagnostics.py
 ```
 
 ---
@@ -90,6 +93,7 @@ same rule.
 |------|-------------|
 | `neural_network_code.py` | Main training/evaluation script → `results.md`, `roc.png` |
 | `make_report_figures.py` | Regenerates all report figures into `../outputs/neural_network/` |
+| `gradient_diagnostics.py` | Numpy MLP that measures per-layer gradient health at init → `gradient_health.png` |
 | `author_features_extracted_full.csv` | Full feature matrix: 107 features × 723 passages, keyed by `author`, `passage_id` |
 | `results.md` | Latest dev/test evaluation (generated) |
 | `roc.png` | One-vs-rest ROC curves for the selected model (generated) |
@@ -124,6 +128,22 @@ Selected by dev accuracy: **All 107 features · Depth 1 (64,)** — dev 0.9034.
 **Depth matters the wrong way.** Accuracy is flat from depth 1 to depth 10, then
 collapses to ~0.21 (the 1/5 random baseline) at depth 50 — a vanishing-gradient
 optimisation failure, not over-fitting. A shallow MLP is preferable.
+
+**Gradient diagnostic** (`gradient_diagnostics.py`). Measuring the RMS weight
+gradient at initialisation (Glorot-uniform init, exactly sklearn's ReLU scheme,
+averaged over 50 inits) confirms the cause: the gradient reaching the
+input-facing first layer collapses with depth.
+
+| Depth | First-layer grad RMS | Output grad RMS | Ratio (out/first) |
+|------:|---------------------:|----------------:|------------------:|
+| 1  | 2.0×10⁻² | 7.0×10⁻² | 3.5 |
+| 3  | 7.4×10⁻³ | 3.1×10⁻² | 4.2 |
+| 10 | 4.2×10⁻⁴ | 5.8×10⁻³ | 13.7 |
+| 50 | 2.5×10⁻¹⁰ | 5.5×10⁻³ | 2.2×10⁷ |
+
+At 50 layers the first layer sees a gradient ~8 orders of magnitude weaker than
+in the shallow net — it cannot learn, so the network never leaves its random
+init. See `outputs/neural_network/gradient_health.png`.
 
 **Seed stability.** Retrained under 10 seeds (split + weight init), test accuracy
 is **0.931 ± 0.018** (range 0.890–0.959); the `random_state=42` headline sits at
