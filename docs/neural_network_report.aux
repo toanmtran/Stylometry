@@ -41,16 +41,21 @@
 \newlabel{sec:depth}{{3}{5}{How Deep Should the Network Be?}{section.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf  {collapses to chance at depth 50} on both tasks.}}{6}{figure.caption.8}\protected@file@percent }
 \newlabel{fig:depth}{{6}{6}{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf {collapses to chance at depth 50} on both tasks}{figure.caption.8}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}How Stable Is the Result Across Seeds?}{6}{section.4}\protected@file@percent }
-\newlabel{sec:seeds}{{4}{6}{How Stable Is the Result Across Seeds?}{section.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}}{7}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:seeds}{{7}{7}{Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class)}{figure.caption.9}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{7}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Setup and Reproducibility}{7}{section.6}\protected@file@percent }
-\newlabel{sec:setup}{{6}{7}{Setup and Reproducibility}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Dependencies.}{7}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Install.}{8}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Run the models.}{8}{lstnumber.-1.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Regenerate the report figures.}{8}{lstnumber.-2.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Compile this report.}{8}{lstnumber.-3.2}\protected@file@percent }
-\gdef \@abspage@last{8}
+\@writefile{toc}{\contentsline {paragraph}{Are the gradients actually vanishing?}{6}{figure.caption.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Gradient health at initialisation. \textit  {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit  {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic.}}{7}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:grad}{{7}{7}{Gradient health at initialisation. \textit {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic}{figure.caption.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth.}}{7}{table.caption.10}\protected@file@percent }
+\newlabel{tab:grad}{{3}{7}{RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth}{table.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}How Stable Is the Result Across Seeds?}{7}{section.4}\protected@file@percent }
+\newlabel{sec:seeds}{{4}{7}{How Stable Is the Result Across Seeds?}{section.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}}{8}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:seeds}{{8}{8}{Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class)}{figure.caption.11}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{8}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Setup and Reproducibility}{8}{section.6}\protected@file@percent }
+\newlabel{sec:setup}{{6}{8}{Setup and Reproducibility}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dependencies.}{8}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Install.}{9}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Run the models.}{9}{lstnumber.-1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Regenerate the report figures.}{9}{lstnumber.-2.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compile this report.}{9}{lstnumber.-3.3}\protected@file@percent }
+\gdef \@abspage@last{9}

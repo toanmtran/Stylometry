@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.1)  5 JUN 2026 21:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.1)  7 JUN 2026 18:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1005,37 +1005,37 @@ Package: titlesec 2025/01/04 v2.17 Sectioning titles
 \titlewidthlast=\dimen333
 \titlewidthfirst=\dimen334
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 62.
+Package hyperref Info: Option `colorlinks' set `true' on input line 65.
 LaTeX Font Info:    Trying to load font information for T1+ntxtlf on input line
- 96.
+ 99.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/newtx\t1ntxtlf.fd
 File: t1ntxtlf.fd 2021/05/24 v1.1 font definition file for T1/ntx/tlf
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.95pt on input line 96.
+(Font)              scaled to size 10.95pt on input line 99.
 
 (neural_network_report.aux)
 \openout1 = `neural_network_report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -1071,13 +1071,13 @@ LaTeX Font Info:    ... okay on input line 96.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \microtypecontext on input line 96.
-Package microtype Info: Applying patch `item' on input line 96.
-Package microtype Info: Applying patch `toc' on input line 96.
-Package microtype Info: Applying patch `eqnum' on input line 96.
-Package microtype Info: Applying patch `footnote' on input line 96.
-Package microtype Info: Applying patch `verbatim' on input line 96.
-LaTeX Info: Redefining \microtypesetup on input line 96.
+LaTeX Info: Redefining \microtypecontext on input line 99.
+Package microtype Info: Applying patch `item' on input line 99.
+Package microtype Info: Applying patch `toc' on input line 99.
+Package microtype Info: Applying patch `eqnum' on input line 99.
+Package microtype Info: Applying patch `footnote' on input line 99.
+Package microtype Info: Applying patch `verbatim' on input line 99.
+LaTeX Info: Redefining \microtypesetup on input line 99.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -1134,16 +1134,16 @@ Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks49
 \inpenc@posthook=\toks50
 )
-Package hyperref Info: Link coloring ON on input line 96.
+Package hyperref Info: Link coloring ON on input line 99.
 
 (neural_network_report.out) (neural_network_report.out)
 \@outlinefile=\write4
 \openout4 = `neural_network_report.out'.
 
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 17.28pt on input line 98.
-LaTeX Font Info:    Trying to load font information for T1+lmss on input line 9
-8.
+(Font)              scaled to size 17.28pt on input line 101.
+LaTeX Font Info:    Trying to load font information for T1+lmss on input line 1
+01.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmss.fd
 File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -1153,9 +1153,9 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 12.0pt on input line 98.
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 9
-8.
+(Font)              scaled to size 12.0pt on input line 101.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 1
+01.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/lm\ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -1164,32 +1164,32 @@ File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 9
-8.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 1
+01.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/lm\omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-98.
+101.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/lm\omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-98.
+101.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/lm\omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 98.
+(Font)              <12> on input line 101.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 98.
+(Font)              <8> on input line 101.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 98.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 98.
-
+(Font)              <6> on input line 101.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 101
+.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
@@ -1197,8 +1197,8 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 98.
-
+LaTeX Font Info:    Trying to load font information for U+msb on input line 101
+.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -1207,39 +1207,39 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 10.95pt on input line 105.
+(Font)              scaled to size 10.95pt on input line 108.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 105.
+(Font)              <10.95> on input line 108.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 14.4pt on input line 108.
+(Font)              scaled to size 14.4pt on input line 111.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 14.4pt on input line 108.
+(Font)              scaled to size 14.4pt on input line 111.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 10.95pt on input line 111.
+(Font)              scaled to size 10.95pt on input line 114.
 LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 11
-2.
+5.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/inconsolata\t1zi4.fd
 File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 )
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 10.07397pt on input line 112.
+(Font)              scaled to size 10.07397pt on input line 115.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zi4' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 112.
+(Font)              scaled to size 9.19998pt on input line 115.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.0pt on input line 165.
+(Font)              scaled to size 10.0pt on input line 168.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 165.
+(Font)              <10> on input line 168.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 165.
+(Font)              <7> on input line 168.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 165.
+(Font)              <5> on input line 168.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 10.0pt on input line 176.
+(Font)              scaled to size 10.0pt on input line 179.
 
 [1
 
@@ -1257,94 +1257,95 @@ File: ../outputs/neural_network/dev_selection_5class.png Graphic file (type png
 )
 <use ../outputs/neural_network/dev_selection_5class.png>
 Package pdftex.def Info: ../outputs/neural_network/dev_selection_5class.png  us
-ed on input line 208.
+ed on input line 211.
 (pdftex.def)             Requested size: 366.40834pt x 194.66249pt.
 <../outputs/neural_network/confusion_5class.png, id=98, 404.712pt x 361.35pt>
 File: ../outputs/neural_network/confusion_5class.png Graphic file (type png)
 <use ../outputs/neural_network/confusion_5class.png>
 Package pdftex.def Info: ../outputs/neural_network/confusion_5class.png  used o
-n input line 248.
+n input line 251.
 (pdftex.def)             Requested size: 216.09045pt x 192.93713pt.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 9.0pt on input line 249.
+(Font)              scaled to size 9.0pt on input line 252.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 9.0pt on input line 249.
+(Font)              scaled to size 9.0pt on input line 252.
 <../outputs/neural_network/roc_5class.png, id=99, 505.89pt x 404.712pt>
 File: ../outputs/neural_network/roc_5class.png Graphic file (type png)
 <use ../outputs/neural_network/roc_5class.png>
 Package pdftex.def Info: ../outputs/neural_network/roc_5class.png  used on inpu
-t line 254.
+t line 257.
 (pdftex.def)             Requested size: 244.27461pt x 195.42053pt.
 
 [2 <../outputs/neural_network/dev_selection_5class.png>]
-Overfull \hbox (36.49168pt too wide) in paragraph at lines 273--282
-[]\T1/ntxtlf/m/n/10.95 (-20) , [], [], [], [], [], [], [],
- []
-
 <../outputs/neural_network/dev_selection_6class.png, id=111, 462.528pt x 245.71
 8pt>
 File: ../outputs/neural_network/dev_selection_6class.png Graphic file (type png
 )
 <use ../outputs/neural_network/dev_selection_6class.png>
 Package pdftex.def Info: ../outputs/neural_network/dev_selection_6class.png  us
-ed on input line 292.
+ed on input line 295.
 (pdftex.def)             Requested size: 366.40834pt x 194.66249pt.
-[3 <../outputs/neural_network/confusion_5class.png> <../outputs/neural_network/
-roc_5class.png>]
+ [3 <../outputs/neural_network/confusion_5class.png> <../outputs/neural_network
+/roc_5class.png>]
 <../outputs/neural_network/confusion_6class.png, id=121, 404.712pt x 361.35pt>
 File: ../outputs/neural_network/confusion_6class.png Graphic file (type png)
 <use ../outputs/neural_network/confusion_6class.png>
 Package pdftex.def Info: ../outputs/neural_network/confusion_6class.png  used o
-n input line 326.
+n input line 329.
 (pdftex.def)             Requested size: 234.8775pt x 209.71547pt.
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 328.
+(Font)              scaled to size 8.27998pt on input line 331.
 <../outputs/neural_network/roc_6class.png, id=122, 505.89pt x 404.712pt>
 File: ../outputs/neural_network/roc_6class.png Graphic file (type png)
 <use ../outputs/neural_network/roc_6class.png>
 Package pdftex.def Info: ../outputs/neural_network/roc_6class.png  used on inpu
-t line 333.
+t line 336.
 (pdftex.def)             Requested size: 225.4804pt x 180.38342pt.
- [4 <../outputs/neural_network/dev_selection_6class.png>]
+
+[4 <../outputs/neural_network/dev_selection_6class.png>]
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/it' will be
-(Font)              scaled to size 10.95pt on input line 351.
+(Font)              scaled to size 10.95pt on input line 354.
 <../outputs/neural_network/depth_effect.png, id=132, 722.7pt x 274.626pt>
 File: ../outputs/neural_network/depth_effect.png Graphic file (type png)
 <use ../outputs/neural_network/depth_effect.png>
 Package pdftex.def Info: ../outputs/neural_network/depth_effect.png  used on in
-put line 371.
+put line 374.
 (pdftex.def)             Requested size: 446.26582pt x 169.58331pt.
+ [5 <../outputs/neural_network/confusion_6class.png> <../outputs/neural_network
+/roc_6class.png>]
+LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
+(Font)              scaled to size 8.0pt on input line 403.
+LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
+(Font)              scaled to size 6.0pt on input line 403.
+<../outputs/neural_network/gradient_health.png, id=142, 794.97pt x 303.534pt>
+File: ../outputs/neural_network/gradient_health.png Graphic file (type png)
+<use ../outputs/neural_network/gradient_health.png>
+Package pdftex.def Info: ../outputs/neural_network/gradient_health.png  used on
+ input line 412.
+(pdftex.def)             Requested size: 446.26582pt x 170.39471pt.
+LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
+(Font)              scaled to size 10.0pt on input line 417.
 
-[5 <../outputs/neural_network/confusion_6class.png> <../outputs/neural_network/
-roc_6class.png>]
-<../outputs/neural_network/seed_stability.png, id=142, 722.7pt x 274.626pt>
+[6 <../outputs/neural_network/depth_effect.png>]
+<../outputs/neural_network/seed_stability.png, id=151, 722.7pt x 274.626pt>
 File: ../outputs/neural_network/seed_stability.png Graphic file (type png)
 <use ../outputs/neural_network/seed_stability.png>
 Package pdftex.def Info: ../outputs/neural_network/seed_stability.png  used on 
-input line 413.
+input line 473.
 (pdftex.def)             Requested size: 446.26582pt x 169.58331pt.
- [6 <../outputs/neural_network/depth_effect.png>]
-Overfull \hbox (92.9512pt too wide) in paragraph at lines 449--453
-\T1/ntxtlf/m/n/10.95 (-20) class) and [] (open-set 6-class). The re-port fig-ur
-es are pro-duced by []. 
- []
-
+ [7 <../outputs/neural_network/gradient_health.png>]
 LaTeX Font Info:    Trying to load font information for TS1+ntxtlf on input lin
-e 457.
+e 517.
+
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/newtx\ts1ntxtlf.fd
 File: ts1ntxtlf.fd 2015/01/18 v1.0 fd file for TS1/ntxtlf
 )
 LaTeX Font Info:    Font shape `TS1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.95pt on input line 457.
+(Font)              scaled to size 10.95pt on input line 517.
 
-[7{C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-ts1.
-enc} <../outputs/neural_network/seed_stability.png>]
-Overfull \hbox (10.64763pt too wide) in paragraph at lines 488--491
-\T1/ntxtlf/m/n/10.95 (-20) depth-effect plot, con-fu-sion ma-tri-ces, ROC curve
-s, and the seed-stability sweep --- into []. 
- []
-
-[8] (neural_network_report.aux)
+[8{C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-ts1.
+enc} <../outputs/neural_network/seed_stability.png>] [9]
+(neural_network_report.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2020/03/25>
@@ -1353,11 +1354,11 @@ Package rerunfilecheck Info: File `neural_network_report.out' has not changed.
 (rerunfilecheck)             Checksum: 07083FF01D2E1A293F6A66EDF5E33C8D;1308.
  ) 
 Here is how much of TeX's memory you used:
- 34102 strings out of 467870
- 682141 string characters out of 5418356
- 1231501 words of memory out of 5000000
- 62183 multiletter control sequences out of 15000+600000
- 737978 words of font info for 191 fonts, out of 8000000 for 9000
+ 34155 strings out of 467870
+ 683356 string characters out of 5418356
+ 1264022 words of memory out of 5000000
+ 62202 multiletter control sequences out of 15000+600000
+ 748077 words of font info for 209 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  102i,11n,117p,1212b,1257s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/inconsolata/
@@ -1380,9 +1381,9 @@ onts/type1/public/newtx/ztmb.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/
 fonts/type1/public/newtx/ztmbi.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTe
 X/fonts/type1/public/newtx/ztmr.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKT
 eX/fonts/type1/public/newtx/ztmri.pfb>
-Output written on neural_network_report.pdf (8 pages, 751234 bytes).
+Output written on neural_network_report.pdf (9 pages, 843232 bytes).
 PDF statistics:
- 278 PDF objects out of 1000 (max. 8388607)
- 43 named destinations out of 1000 (max. 500000)
- 49397 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 291 PDF objects out of 1000 (max. 8388607)
+ 47 named destinations out of 1000 (max. 500000)
+ 55546 words of extra memory for PDF output out of 61914 (max. 10000000)
 

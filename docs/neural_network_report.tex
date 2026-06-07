@@ -6,6 +6,9 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{microtype}
 \usepackage{parskip}
+% Let TeX stretch spacing as a last resort so unbreakable \code{} chips
+% never spill past the right margin (clears overfull \hbox warnings).
+\setlength{\emergencystretch}{3em}
 \usepackage{float}           % [H] float specifier
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning}
@@ -394,6 +397,63 @@ tabular stylometric features, \textbf{a shallow MLP is not just sufficient but
 preferable}.
 \end{keybox}
 
+\paragraph{Are the gradients actually vanishing?}
+The vanishing-gradient explanation is testable, so we test it. We re-implement
+the same architecture in numpy --- Glorot-uniform initialisation with bound
+$\sqrt{6/(\text{fan\_in}+\text{fan\_out})}$ (exactly what \code{sklearn} uses for
+ReLU layers), ReLU hidden units, softmax output, cross-entropy loss --- and read
+off the gradient of the loss with respect to every layer's weights from a single
+forward/backward pass on the standardised 5-class features. Averaging over 50
+random initialisations, Figure~\ref{fig:grad} reports the root-mean-square (RMS)
+of the weight gradients at each layer, at the moment training begins.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/gradient_health.png}
+  \caption{Gradient health at initialisation. \textit{Left}: RMS weight gradient
+  per layer, from the input-facing layer (1) to the output-facing layer, one
+  curve per depth (log scale). \textit{Right}: the gradient reaching the
+  input-facing first layer as a function of total depth. Both axes are
+  logarithmic.}
+  \label{fig:grad}
+\end{figure}
+
+The signature is unmistakable. In the shallow networks the gradient is roughly
+uniform across layers --- at depth 1 the input layer already sees an RMS gradient
+of $2.0\times10^{-2}$, only $3.5\times$ smaller than the output layer. As depth
+grows the gradient decays geometrically on its way back to the input, so the
+first layer is starved (Table~\ref{tab:grad}). By 50 layers the input-facing
+layer receives an RMS gradient of $2.5\times10^{-10}$ --- eight orders of
+magnitude weaker than in the shallow net, and $2\times10^{7}$ times weaker than
+the output layer of the \emph{same} network.
+
+\begin{table}[H]
+\centering
+\caption{RMS weight gradient at initialisation, averaged over 50 inits. The
+first layer (input-facing) is the one that must learn feature combinations; its
+gradient collapses with depth.}
+\label{tab:grad}
+\begin{tabular}{rccc}
+\toprule
+\textbf{Depth} & \textbf{First-layer grad} & \textbf{Output grad} & \textbf{Ratio (out\,/\,first)} \\
+\midrule
+1  & $2.0\times10^{-2}$  & $7.0\times10^{-2}$ & $3.5$ \\
+3  & $7.4\times10^{-3}$  & $3.1\times10^{-2}$ & $4.2$ \\
+10 & $4.2\times10^{-4}$  & $5.8\times10^{-3}$ & $13.7$ \\
+50 & $2.5\times10^{-10}$ & $5.5\times10^{-3}$ & $2.2\times10^{7}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A weight that sees a gradient of $10^{-10}$ cannot move: with early stopping
+monitoring a validation score that never improves, training halts within a few
+epochs and the deep network never leaves its random initialisation --- which is
+exactly the chance-level accuracy we saw at depth 50. This confirms the collapse
+is an \emph{optimisation} pathology, not a capacity or over-fitting one. The
+standard fixes (residual connections, batch/layer normalisation, He
+initialisation) all exist precisely to keep this gradient alive; none are
+warranted here, because the shallow network already solves the task.
+
 % =============================================================================
 \section{How Stable Is the Result Across Seeds?}
 \label{sec:seeds}
@@ -449,7 +509,7 @@ linearly-accessible once the right features are in hand.
 All experiments run on CPU in well under a minute each. The code lives in two
 folders: \code{neural\_network/} (5-class) and \code{neural\_network\_6class/}
 (open-set 6-class). The report figures are produced by
-\code{neural\_network/make\_report\_figures.py}.
+\code{make\_report\_figures.py} and \code{gradient\_diagnostics.py}.
 
 \paragraph{Dependencies.}
 Python~$\geq 3.10$ with a handful of scientific packages:
@@ -463,6 +523,7 @@ Python~$\geq 3.10$ with a handful of scientific packages:
 \end{itemize}
 
 \paragraph{Install.}
+From the project root, ideally inside a virtual environment:
 \begin{lstlisting}[style=shell]
 # from the project root; a virtual environment is recommended
 python -m venv .venv
@@ -485,15 +546,19 @@ python neural_network_6class.py
 \end{lstlisting}
 
 \paragraph{Regenerate the report figures.}
-This reproduces every figure in this document --- dev-selection heatmaps, the
+This reproduces most figures in this document --- dev-selection heatmaps, the
 depth-effect plot, confusion matrices, ROC curves, and the seed-stability
-sweep --- into \code{outputs/neural\_network/}.
+sweep --- into \code{outputs/neural\_network/}. The gradient-health diagnostic
+(Figure~\ref{fig:grad}, Table~\ref{tab:grad}) is a separate script.
 \begin{lstlisting}[style=shell]
 cd neural_network
-python make_report_figures.py
+python make_report_figures.py      # heatmaps, depth, confusion, ROC, seed stability
+python gradient_diagnostics.py     # per-layer gradient health -> gradient_health.png
 \end{lstlisting}
 
 \paragraph{Compile this report.}
+Run \code{pdflatex} from the \code{docs/} folder (twice, so cross-references and
+the table of figures resolve):
 \begin{lstlisting}[style=shell]
 cd docs
 pdflatex neural_network_report.tex   # run twice to resolve cross-references
