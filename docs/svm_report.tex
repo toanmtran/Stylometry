@@ -75,7 +75,7 @@
 }
 
 % ── Title block ───────────────────────────────────────────────────────────────
-\title{\vspace{-2.0em}{\color{accent}\textsf{\bfseries Author Verification Using Support Vector Machine}}}
+\title{\vspace{-2.0em}{\color{accent}\textsf{\bfseries Authorship Verification Using Support Vector Machine}}}
 \author{}
 \date{}
 
@@ -84,7 +84,7 @@
 \vspace{-3.0em}
 
 \noindent
-\textit{Author verification (Same-author detection) is the task of determining whether two articles are written by the same author. Unlike traditional text classification, this problem focuses on analyzing the writing style rather than the topic or the meaning of the articles. In this problem, Support Vector Machine (SVM) was used to classify whether pairs of articles are written by the same author. The objective is to evaluate the effectiveness of SVM for this problem and analyze the impact of different hyperparameter settings on model performance.}
+\textit{Authorship verification (Same-author detection) is the task of determining whether two articles are written by the same author. Unlike traditional text classification, this problem focuses on analyzing the writing style rather than the topic or the meaning of the articles. In this problem, Support Vector Machine (SVM) was used to classify whether pairs of articles are written by the same author. The objective is to evaluate the effectiveness of SVM for this problem and analyze the impact of different hyperparameter settings on model performance.}
 
 % =============================================================================
 \section{Support Vector Machine}
@@ -155,7 +155,7 @@ The dataset was collected from LessWrong forum (\url{lesswrong.com}). It include
 If article pairs are randomly divided into training and test sets, articles belonging to the same author may appear in both sets. Therefore, the model will suffer from data leakage. To prevent this problem, the implementation performs an author-based split rather than an article-based split. We extract the set of all unique authors in the dataset. The array of unique authors then was divided such that 80\% of the authors (28 authors) were assigned to the training set, and the remaining 20\% (7 authors) were reserved for the test set. Consequently, the authors present in the test set were entirely disjoint from those in the training set.
 
 \paragraph{Article-Pairs Generation.}
-Because we consider author verification as a binary classification problem, the original dataset was transformed into a pairwise format. Consider two articles 1 and 2, let $f_1, f_2$ be the feature vectors extracted from article 1 and article 2 respectively. To provide the SVM a comprehensive representation of stylistic similarity and divergence, the final combined feature vector was concatenated using three distinct operations:
+Because we consider authorship verification as a binary classification problem, the original dataset was transformed into a pairwise format. Consider two articles 1 and 2, let $f_1, f_2$ be the feature vectors extracted from article 1 and article 2 respectively. To provide the SVM a comprehensive representation of stylistic similarity and divergence, the final combined feature vector was concatenated using three distinct operations:
 \begin{itemize}\setlength\itemsep{1pt}
   \item \textbf{Absolute Difference} ($\lvert f_1 - f_2 \rvert$): It linearly captures the magnitude of stylistic differentiation between two articles, highlighting features where the authors' writing habits diverge. If two documents are written by the same author, we expect that many stylistic features should be similar.
   \item \textbf{Squared Difference} ($(f_1-f_2)^2$): Squared difference is similar to absolute difference, but it emphasizes large differences more strongly. By amplifying mismatches between these features, the model can pay more attention to features that better distinguish between authors.
