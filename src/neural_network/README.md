@@ -1,4 +1,4 @@
-# Neural Network — Open-Set Stylometric Author Classification
+# Neural Network — Six-Class Stylometric Author Classification
 
 A NN authorship classifier trained on 107 stylometric features extracted from
 LessWrong blog posts. Five known authors — **Eliezer Yudkowsky, Johnswentworth,
