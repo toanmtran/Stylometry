@@ -178,7 +178,7 @@ In traditional machine learning workflows, hyperparameter tuning is typically ex
   where $\mu$ is the mean and $\sigma$ is the standard deviation. 
   
   The scaler is fitted only on the training set and then applied to the validation set.
-  \item \textbf{Grid Search}: Hyperparameter tuning was performed using an exhaustive grid search over multiple combinations of the SVM parameters \code{C} and \code{$\gamma$}. The search space for \code{C} is $[0.1, 1, 10]$ and \code{$\gamma$} is $[0.001, 0.01, 0.1]$. The entire pipeline was repeated 5 times using 5 different random seeds (Seeds 19 to 23) to improve robustness. The final configuration was chosen manually based on the accuracies on both traning and validation sets. 
+  \item \textbf{Grid Search}: Hyperparameter tuning was performed using an exhaustive grid search over multiple combinations of the SVM parameters \code{C} and \code{$\gamma$}. The search space for \code{C} is $[0.1, 1, 10]$ and \code{$\gamma$} is $[0.001, 0.01, 0.1]$. The entire pipeline was repeated 5 times using 5 different random seeds (Seeds 19 to 23) to improve robustness. The final configuration was chosen manually based on the accuracies on both training and validation sets. 
 \end{itemize}
 
 \paragraph{Grid-Search Result.}
