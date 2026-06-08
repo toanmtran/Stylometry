@@ -2,60 +2,41 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\@writefile{toc}{\contentsline {section}{\numberline {1}Classifying Five Authors with an MLP}{1}{section.1}\protected@file@percent }
-\newlabel{sec:fiveauthors}{{1}{1}{Classifying Five Authors with an MLP}{section.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Classifying Authors with an NN}{1}{section.1}\protected@file@percent }
+\newlabel{sec:model}{{1}{1}{Classifying Authors with an NN}{section.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{The open-set task.}{1}{section.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Dataset and preprocessing.}{1}{section.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The classifier.}{1}{section.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The winning architecture: a single hidden layer of 64 ReLU units feeding a $K$-way softmax. Deeper variants stack more 64-unit layers between input and output (Section~\ref {sec:depth}).}}{1}{figure.caption.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The winning architecture: a single hidden layer of 64 ReLU units feeding a $6$-way softmax (five known authors plus ``none''). Deeper variants stack more 64-unit layers between input and output (Section~\ref {sec:depth}).}}{2}{figure.caption.1}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:arch}{{1}{1}{The winning architecture: a single hidden layer of 64 ReLU units feeding a $K$-way softmax. Deeper variants stack more 64-unit layers between input and output (Section~\ref {sec:depth})}{figure.caption.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training protocol.}{1}{figure.caption.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Model selection on the dev set.}{2}{figure.caption.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Dev accuracy for the 5-class MLP across feature subsets (rows) and network depths (columns). The starred cell --- all 107 features, depth 1 --- is the selected model. Depth 50 sits at $0.207$, barely above the five-class random baseline of $0.20$.}}{2}{figure.caption.2}\protected@file@percent }
-\newlabel{fig:dev5}{{2}{2}{Dev accuracy for the 5-class MLP across feature subsets (rows) and network depths (columns). The starred cell --- all 107 features, depth 1 --- is the selected model. Depth 50 sits at $0.207$, barely above the five-class random baseline of $0.20$}{figure.caption.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Results.}{2}{figure.caption.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Test-set performance of the selected 5-class MLP (all 107 features, depth 1).}}{2}{table.caption.3}\protected@file@percent }
-\newlabel{tab:test5}{{1}{2}{Test-set performance of the selected 5-class MLP (all 107 features, depth 1)}{table.caption.3}{}}
-\newlabel{fig:cm5}{{3a}{3}{Confusion matrix (rows = actual, columns = predicted)}{figure.caption.4}{}}
-\newlabel{sub@fig:cm5}{{a}{3}{Confusion matrix (rows = actual, columns = predicted)}{figure.caption.4}{}}
-\newlabel{fig:roc5}{{3b}{3}{One-vs-rest ROC curves with macro average}{figure.caption.4}{}}
-\newlabel{sub@fig:roc5}{{b}{3}{One-vs-rest ROC curves with macro average}{figure.caption.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Test-set diagnostics for the 5-class MLP.}}{3}{figure.caption.4}\protected@file@percent }
-\newlabel{fig:diag5}{{3}{3}{Test-set diagnostics for the 5-class MLP}{figure.caption.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Open-Set Recognition: the ``None of the Above'' Problem}{3}{section.2}\protected@file@percent }
-\newlabel{sec:openset}{{2}{3}{Open-Set Recognition: the ``None of the Above'' Problem}{section.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Constructing a ``none'' class.}{3}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Results.}{3}{section.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$.}}{4}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:dev6}{{4}{4}{Dev accuracy for the 6-class (open-set) MLP. The selected model is again all 107 features at depth 1, and depth 50 again collapses to the six-class random baseline of $0.167$}{figure.caption.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Test-set performance of the selected 6-class MLP (all 107 features, depth 1).}}{4}{table.caption.6}\protected@file@percent }
-\newlabel{tab:test6}{{2}{4}{Test-set performance of the selected 6-class MLP (all 107 features, depth 1)}{table.caption.6}{}}
-\newlabel{fig:cm6}{{5a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.7}{}}
-\newlabel{sub@fig:cm6}{{a}{5}{Confusion matrix. The \code {none} row and column are perfectly isolated}{figure.caption.7}{}}
-\newlabel{fig:roc6}{{5b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.7}{}}
-\newlabel{sub@fig:roc6}{{b}{5}{One-vs-rest ROC curves with macro average}{figure.caption.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Test-set diagnostics for the 6-class open-set MLP.}}{5}{figure.caption.7}\protected@file@percent }
-\newlabel{fig:diag6}{{5}{5}{Test-set diagnostics for the 6-class open-set MLP}{figure.caption.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Why does adding a class \emph  {help}?}{5}{figure.caption.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}How Deep Should the Network Be?}{5}{section.3}\protected@file@percent }
-\newlabel{sec:depth}{{3}{5}{How Deep Should the Network Be?}{section.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf  {collapses to chance at depth 50} on both tasks.}}{6}{figure.caption.8}\protected@file@percent }
-\newlabel{fig:depth}{{6}{6}{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf {collapses to chance at depth 50} on both tasks}{figure.caption.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Are the gradients actually vanishing?}{6}{figure.caption.8}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Gradient health at initialisation. \textit  {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit  {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic.}}{7}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:grad}{{7}{7}{Gradient health at initialisation. \textit {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic}{figure.caption.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth.}}{7}{table.caption.10}\protected@file@percent }
-\newlabel{tab:grad}{{3}{7}{RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth}{table.caption.10}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}How Stable Is the Result Across Seeds?}{7}{section.4}\protected@file@percent }
-\newlabel{sec:seeds}{{4}{7}{How Stable Is the Result Across Seeds?}{section.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}}{8}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:seeds}{{8}{8}{Test accuracy of the selected MLP across ten seeds. The dashed line is the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight: $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class)}{figure.caption.11}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{8}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Setup and Reproducibility}{8}{section.6}\protected@file@percent }
-\newlabel{sec:setup}{{6}{8}{Setup and Reproducibility}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Dependencies.}{8}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Install.}{9}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Run the models.}{9}{lstnumber.-1.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Regenerate the report figures.}{9}{lstnumber.-2.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Compile this report.}{9}{lstnumber.-3.3}\protected@file@percent }
-\gdef \@abspage@last{9}
+\newlabel{fig:arch}{{1}{2}{The winning architecture: a single hidden layer of 64 ReLU units feeding a $6$-way softmax (five known authors plus ``none''). Deeper variants stack more 64-unit layers between input and output (Section~\ref {sec:depth})}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Training protocol.}{2}{figure.caption.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Which features?}{2}{figure.caption.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The 15 most informative features by Random Forest permutation importance (mean drop in held-out accuracy when a feature is shuffled). Punctuation habits (parenthesis, semicolon, colon rates), a vocabulary-richness measure (Honor\'e's $R$), and a handful of function words (\tcbox [on line, colback=codebg, colframe=codebg, boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt] {\ttfamily  \small  which}, \tcbox [on line, colback=codebg, colframe=codebg, boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt] {\ttfamily  \small  this}, \tcbox [on line, colback=codebg, colframe=codebg, boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt] {\ttfamily  \small  would}, \tcbox [on line, colback=codebg, colframe=codebg, boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt] {\ttfamily  \small  that}) dominate --- exactly the topic-independent, stylistic signals we want.}}{2}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:featimp}{{2}{2}{The 15 most informative features by Random Forest permutation importance (mean drop in held-out accuracy when a feature is shuffled). Punctuation habits (parenthesis, semicolon, colon rates), a vocabulary-richness measure (Honor\'e's $R$), and a handful of function words (\code {which}, \code {this}, \code {would}, \code {that}) dominate --- exactly the topic-independent, stylistic signals we want}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Model selection on the validation set.}{3}{figure.caption.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Validation accuracy across feature subsets (rows) and network depths (columns). The starred cell --- all 107 features, depth 1 --- is the selected model. Depth 50 sits at $0.171$, barely above the six-class random baseline of $1/6\approx 0.167$.}}{3}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:validation}{{3}{3}{Validation accuracy across feature subsets (rows) and network depths (columns). The starred cell --- all 107 features, depth 1 --- is the selected model. Depth 50 sits at $0.171$, barely above the six-class random baseline of $1/6\approx 0.167$}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Results.}{3}{figure.caption.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Test-set performance of the selected NN (all 107 features, depth 1).}}{3}{table.caption.4}\protected@file@percent }
+\newlabel{tab:test}{{1}{3}{Test-set performance of the selected NN (all 107 features, depth 1)}{table.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Test-set confusion matrix (rows = actual, columns = predicted). The \tcbox [on line, colback=codebg, colframe=codebg, boxrule=0pt, arc=2pt, left=2pt, right=2pt, top=0pt, bottom=0pt] {\ttfamily  \small  none} row and column are perfectly isolated.}}{4}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:cm}{{4}{4}{Test-set confusion matrix (rows = actual, columns = predicted). The \code {none} row and column are perfectly isolated}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}How Deep Should the Network Be?}{4}{section.2}\protected@file@percent }
+\newlabel{sec:depth}{{2}{4}{How Deep Should the Network Be?}{section.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Validation accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf  {collapses to chance at depth 50}.}}{5}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:depth}{{5}{5}{Validation accuracy vs.\ network depth (number of 64-unit hidden layers, log scale). Performance is flat-to-slightly-declining from depth 1 to depth 10, then \textbf {collapses to chance at depth 50}}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Are the gradients actually vanishing?}{5}{figure.caption.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Gradient health at initialisation. \textit  {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit  {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic.}}{6}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:grad}{{6}{6}{Gradient health at initialisation. \textit {Left}: RMS weight gradient per layer, from the input-facing layer (1) to the output-facing layer, one curve per depth (log scale). \textit {Right}: the gradient reaching the input-facing first layer as a function of total depth. Both axes are logarithmic}{figure.caption.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth.}}{6}{table.caption.8}\protected@file@percent }
+\newlabel{tab:grad}{{2}{6}{RMS weight gradient at initialisation, averaged over 50 inits. The first layer (input-facing) is the one that must learn feature combinations; its gradient collapses with depth}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Conclusion}{6}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Setup and Reproducibility}{7}{section.4}\protected@file@percent }
+\newlabel{sec:setup}{{4}{7}{Setup and Reproducibility}{section.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dependencies.}{7}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Install.}{7}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Run the model.}{7}{lstnumber.-1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Regenerate the report figures.}{7}{lstnumber.-2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compile this report.}{7}{lstnumber.-3.3}\protected@file@percent }
+\gdef \@abspage@last{7}

@@ -101,36 +101,52 @@
 \vspace{-3.0em}
 
 \noindent
-\textit{Given a passage written by one of $K$ known authors, can we recover who
-wrote it from writing style alone? Where K-means asked whether style
-\emph{clusters}, here we ask a supervised question: train a multi-layer
-perceptron on labelled passages and let it learn the decision boundaries
-between authors directly.}
+\textit{Given a passage written by one of several known authors --- or by nobody
+we know --- can we recover who wrote it from writing style alone? Where K-means
+asked whether style \emph{clusters}, here we ask a supervised question: train a
+neural network on labelled passages and let it learn the decision
+boundaries between authors directly, including a boundary for ``none of the
+above''.}
 
 % =============================================================================
-\section{Classifying Five Authors with an MLP}
-\label{sec:fiveauthors}
+\section{Classifying Authors with an NN}
+\label{sec:model}
+
+\paragraph{The open-set task.}
+A closed-set classifier assumes every passage was written by one of the known
+authors. In the real world that assumption fails: a passage may come from an
+\emph{unknown} author, and a closed-set model will confidently mislabel it as
+whichever known author it resembles most. We therefore pose the problem as
+\textbf{open-set} recognition from the outset: five known LessWrong authors plus
+an explicit sixth class, \code{none\_of\_the\_5\_authors}, that the network must
+learn to recognise.
 
 \paragraph{Dataset and preprocessing.}
-We use five LessWrong authors --- \code{Eliezer Yudkowsky}, \code{John
-Wentworth}, \code{Raemon}, \code{Scott Alexander}, and \code{Zvi} --- with
-roughly 150 passages each, for \textbf{723 labelled passages} in total. From
-each passage we extract the same \textbf{107 stylometric features} used
-throughout this project, spanning seven groups: word/sentence-length
-statistics, vocabulary richness (type-token ratio, hapax ratio, Yule~$K$,
-Simpson~$D$, Brun\'et~$W$, Honor\'e~$R$), function-word frequencies, stylistic
-word-category rates, punctuation rates, coarse POS-tag distributions, and
-character-level ratios. None of these depend on \emph{what} a passage is about,
-only on \emph{how} it is written.
+The five known authors are \code{Eliezer Yudkowsky}, \code{John Wentworth},
+\code{Raemon}, \code{Scott Alexander}, and \code{Zvi}, with roughly 150 passages
+each ($723$ passages in total). The ``none'' class is built from \textbf{15
+other LessWrong authors} not among the five (\code{ricraz}, \code{benquo},
+\code{abramdemski}, \code{sarahconstantin}, \code{holdenkarnofsky},
+\code{gordon-seidoh-worley}, \code{screwtape}, \code{buck}, \code{turntrout},
+\code{nunosempere}, \code{benito}, \code{petermccluskey}, \code{joe-carlsmith},
+\code{adamshimi}, \code{tsvibt}), sampling 10 articles from each for
+\textbf{150 ``none'' passages}. Merged, this gives \textbf{873 passages over 6
+classes}.
 
-Every feature is z-scored with \code{sklearn}'s \code{StandardScaler} (mean 0,
-standard deviation 1) before training. Crucially, the scaler is fit on the
-training split only and then applied to the dev and test splits, so no test-set
-statistics leak into training.
+From each passage we extract \textbf{107 stylometric features} spanning seven
+groups: word/sentence-length statistics, vocabulary richness (type-token ratio,
+hapax ratio, Yule~$K$, Simpson~$D$, Brun\'et~$W$, Honor\'e~$R$), function-word
+frequencies, stylistic word-category rates, punctuation rates, coarse POS-tag
+distributions, and character-level ratios. None of these depend on \emph{what} a
+passage is about, only on \emph{how} it is written. Every feature is z-scored
+with \code{sklearn}'s \code{StandardScaler} (mean 0, standard deviation 1)
+before training. Crucially, the scaler is fit on the training split only and
+then applied to the validation and test splits, so no test-set statistics leak into
+training.
 
 \paragraph{The classifier.}
-A multi-layer perceptron (MLP) maps a feature vector
-$\mathbf{x}\in\mathbb{R}^{107}$ to a probability over the $K$ authors. Each
+A neural network (NN) maps a feature vector
+$\mathbf{x}\in\mathbb{R}^{107}$ to a probability over the $K=6$ classes. Each
 hidden layer applies an affine transform followed by the \textbf{ReLU}
 nonlinearity,
 \[
@@ -167,30 +183,54 @@ layers use 64 units; we vary only the \emph{number} of such layers.
 ]
   \node[layer]    (in)  {Input\\$\mathbf{x}\in\mathbb{R}^{107}$};
   \node[layer, right=of in]  (h) {Hidden\\$64$ units, ReLU};
-  \node[outlayer, right=of h] (out) {Softmax\\$K$ authors};
+  \node[outlayer, right=of h] (out) {Softmax\\$6$ classes};
   \node[draw=none, right=8mm of out, font=\small\sffamily, align=center]
-    (p) {$p_1,\dots,p_K$\\\footnotesize argmax = prediction};
+    (p) {$p_1,\dots,p_6$\\\footnotesize argmax = prediction};
   \draw[arr] (in)  -- (h);
   \draw[arr] (h)   -- (out);
   \draw[arr] (out) -- (p);
 \end{tikzpicture}
 \caption{The winning architecture: a single hidden layer of 64 ReLU units
-feeding a $K$-way softmax. Deeper variants stack more 64-unit layers between
-input and output (Section~\ref{sec:depth}).}
+feeding a $6$-way softmax (five known authors plus ``none''). Deeper variants
+stack more 64-unit layers between input and output (Section~\ref{sec:depth}).}
 \label{fig:arch}
 \end{figure}
 
 \paragraph{Training protocol.}
-We split the 723 passages \textbf{60/20/20} (train / dev / test), stratified by
-author, and use the dev split to choose a model before ever touching the test
+We split the 873 passages \textbf{60/20/20} (train / validation / test), stratified by
+class, and use the validation split to choose a model before ever touching the test
 split. Specifically we grid-search over three feature subsets (the top 30, top
-50, and all 107 features, ranked by a univariate filter) crossed with four
-network depths, training each combination on the train split and scoring it on
-dev. The winner is then \textbf{retrained on train$+$dev combined} and evaluated
-\emph{once} on the held-out test set.
+50, and all 107 features) crossed with four network depths, training each
+combination on the train split and scoring it on validation. The winner is then
+\textbf{retrained on train$+$validation combined} and evaluated \emph{once} on
+the held-out test set.
+
+\paragraph{Which features?}
+The top-30 and top-50 subsets are the most informative features as ranked by
+\textbf{Random Forest permutation importance}: we fit a random forest
+(\code{n\_estimators=500}, \code{max\_depth=5}) and measure, for each feature,
+how much test accuracy drops when that feature's values are randomly shuffled.
+Permutation importance is multivariate and redundancy-aware --- when several
+stylometric features carry overlapping signal, it credits the one the forest
+actually relies on --- so it is a sharper subset selector than scoring each
+feature in isolation. As it turns out the distinction barely matters here: the
+full 107-feature model wins on validation regardless, so the subsets serve only
+to confirm that no small hand-picked group beats simply using everything.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\linewidth]{../src/neural_network/outputs/rf_permutation_importance.png}
+  \caption{The 15 most informative features by Random Forest permutation
+  importance (mean drop in held-out accuracy when a feature is shuffled).
+  Punctuation habits (parenthesis, semicolon, colon rates), a vocabulary-richness
+  measure (Honor\'e's $R$), and a handful of function words (\code{which},
+  \code{this}, \code{would}, \code{that}) dominate --- exactly the
+  topic-independent, stylistic signals we want.}
+  \label{fig:featimp}
+\end{figure}
 
 \begin{keybox}[title=Why early stopping?]
-With only $\sim$430 training passages and thousands of weights, an MLP can
+With only $\sim$520 training passages and thousands of weights, an NN can
 memorise the training set. We pass \code{early\_stopping=True}: \code{sklearn}
 holds out 10\% of the training data as an internal validation set and halts when
 its score fails to improve for \code{n\_iter\_no\_change=15} consecutive epochs
@@ -199,166 +239,72 @@ the depth comparison fair --- every architecture is trained under the same
 stopping rule.
 \end{keybox}
 
-\paragraph{Model selection on the dev set.}
-Figure~\ref{fig:dev5} shows dev accuracy for every feature-subset $\times$ depth
+\paragraph{Model selection on the validation set.}
+Figure~\ref{fig:validation} shows validation accuracy for every feature-subset $\times$ depth
 combination. The clear winner is \textbf{all 107 features with a single hidden
-layer} (dev accuracy $0.903$). Two patterns already stand out: using all 107
+layer} (validation accuracy $0.943$). Two patterns already stand out: using all 107
 features never hurts, and the deepest network (50 layers) collapses to chance
 --- a phenomenon we return to in Section~\ref{sec:depth}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.78\linewidth]{../outputs/neural_network/dev_selection_5class.png}
-  \caption{Dev accuracy for the 5-class MLP across feature subsets (rows) and
-  network depths (columns). The starred cell --- all 107 features, depth 1 --- is
-  the selected model. Depth 50 sits at $0.207$, barely above the
-  five-class random baseline of $0.20$.}
-  \label{fig:dev5}
+  \includegraphics[width=0.78\linewidth]{../src/neural_network/outputs/validation_selection.png}
+  \caption{Validation accuracy across feature subsets (rows) and network depths
+  (columns). The starred cell --- all 107 features, depth 1 --- is the selected
+  model. Depth 50 sits at $0.171$, barely above the six-class random baseline of
+  $1/6\approx0.167$.}
+  \label{fig:validation}
 \end{figure}
 
 \paragraph{Results.}
-Retrained on train$+$dev (578 passages) and evaluated on the 145 test passages,
-the selected model attains the scores in Table~\ref{tab:test5}.
+Retrained on train$+$validation (698 passages) and evaluated on the 175 test passages,
+the selected model attains the scores in Table~\ref{tab:test}.
 
 \begin{table}[H]
 \centering
-\caption{Test-set performance of the selected 5-class MLP (all 107 features,
-depth 1).}
-\label{tab:test5}
+\caption{Test-set performance of the selected NN (all 107 features, depth 1).}
+\label{tab:test}
 \begin{tabular}{lc}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
-Accuracy            & $0.931$ \\
-Weighted F1         & $0.930$ \\
-ROC-AUC (macro OvR) & $0.995$ \\
+Accuracy    & $0.949$ \\
+Weighted F1 & $0.949$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The confusion matrix (Figure~\ref{fig:cm5}) shows a strong diagonal. \code{Zvi}
-and \code{Eliezer Yudkowsky} are recovered almost perfectly (recall $1.00$),
-while the few errors concentrate on \code{Scott Alexander} (recall $0.80$),
-whose passages are occasionally mistaken for \code{Raemon}. The ROC curves
-(Figure~\ref{fig:roc5}) sit in the top-left corner for every author, with a
-macro-averaged AUC of $0.995$: the model's ranking of ``how likely is this
-author'' is near-perfect even where its hard \code{argmax} decision slips.
+The confusion matrix (Figure~\ref{fig:cm}) shows a strong diagonal. The striking
+result is the \code{none\_of\_the\_5\_authors} class itself: \textbf{precision,
+recall, and F1 are all $1.00$}. Not a single unknown-author passage is
+misattributed to one of the five, and not a single known-author passage is
+dumped into the ``none'' bin --- the 15 unknown authors, pooled together, occupy
+a region of style-space cleanly separable from the five targets. Among the five
+known authors the few errors concentrate on \code{Raemon} (recall $0.88$) and
+\code{Scott Alexander} (recall $0.90$), whose passages are occasionally confused
+with one another or with \code{Yudkowsky}; \code{Zvi} is recovered almost
+perfectly.
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.46\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../outputs/neural_network/confusion_5class.png}
-    \caption{Confusion matrix (rows = actual, columns = predicted).}
-    \label{fig:cm5}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.52\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../outputs/neural_network/roc_5class.png}
-    \caption{One-vs-rest ROC curves with macro average.}
-    \label{fig:roc5}
-  \end{subfigure}
-  \caption{Test-set diagnostics for the 5-class MLP.}
-  \label{fig:diag5}
-\end{figure}
-
-% =============================================================================
-\section{Open-Set Recognition: the ``None of the Above'' Problem}
-\label{sec:openset}
-
-The 5-class model assumes every passage was written by one of the five known
-authors. In the real world that assumption fails: a passage may come from a
-\emph{sixth}, unknown author, and a closed-set classifier will confidently
-mislabel it as whichever of the five it resembles most. Can the network learn to
-say ``none of these''?
-
-\paragraph{Constructing a ``none'' class.}
-We add a sixth class, \code{none\_of\_the\_5\_authors}, built from
-\textbf{15 other LessWrong authors} not among the five
-(\code{ricraz}, \code{benquo}, \code{abramdemski}, \code{sarahconstantin},
-\code{holdenkarnofsky}, \code{gordon-seidoh-worley}, \code{screwtape},
-\code{buck}, \code{turntrout}, \code{nunosempere}, \code{benito},
-\code{petermccluskey}, \code{joe-carlsmith}, \code{adamshimi}, \code{tsvibt}),
-sampling 10 articles from each for \textbf{150 ``none'' passages}. Merged with
-the five known authors this gives \textbf{873 passages over 6 classes}. The
-training protocol is otherwise identical to Section~\ref{sec:fiveauthors}.
-
-\paragraph{Results.}
-Dev-set model selection again picks \textbf{all 107 features with a single
-hidden layer} (dev accuracy $0.943$; Figure~\ref{fig:dev6}). Retrained on
-train$+$dev (698 passages) and evaluated on 175 test passages, it scores as
-shown in Table~\ref{tab:test6} --- \emph{higher} than the closed-set 5-class
-model on every metric.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.78\linewidth]{../outputs/neural_network/dev_selection_6class.png}
-  \caption{Dev accuracy for the 6-class (open-set) MLP. The selected model is
-  again all 107 features at depth 1, and depth 50 again collapses to the
-  six-class random baseline of $0.167$.}
-  \label{fig:dev6}
-\end{figure}
-
-\begin{table}[H]
-\centering
-\caption{Test-set performance of the selected 6-class MLP (all 107 features,
-depth 1).}
-\label{tab:test6}
-\begin{tabular}{lc}
-\toprule
-\textbf{Metric} & \textbf{Value} \\
-\midrule
-Accuracy            & $0.949$ \\
-Weighted F1         & $0.949$ \\
-ROC-AUC (macro OvR) & $0.996$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The striking result is the \code{none\_of\_the\_5\_authors} class itself:
-\textbf{precision, recall, and F1 are all $1.00$} (Figure~\ref{fig:cm6}). Not a
-single unknown-author passage is misattributed to one of the five, and not a
-single known-author passage is dumped into the ``none'' bin. The 15 unknown
-authors, pooled together, occupy a region of style-space that is cleanly
-separable from the five targets.
-
-\begin{figure}[H]
-  \centering
-  \begin{subfigure}{0.50\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../outputs/neural_network/confusion_6class.png}
-    \caption{Confusion matrix. The \code{none} row and column are perfectly
-    isolated.}
-    \label{fig:cm6}
-  \end{subfigure}\hfill
-  \begin{subfigure}{0.48\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../outputs/neural_network/roc_6class.png}
-    \caption{One-vs-rest ROC curves with macro average.}
-    \label{fig:roc6}
-  \end{subfigure}
-  \caption{Test-set diagnostics for the 6-class open-set MLP.}
-  \label{fig:diag6}
+  \includegraphics[width=0.56\linewidth]{../src/neural_network/outputs/confusion.png}
+  \caption{Test-set confusion matrix (rows = actual, columns = predicted). The
+  \code{none} row and column are perfectly isolated.}
+  \label{fig:cm}
 \end{figure}
 
 \begin{keybox}[title=Direct training beats indirect thresholding]
-Why add a class instead of simply flagging low-confidence predictions from the
-5-class model as ``unknown''? We tried that indirect route, thresholding the
-5-class softmax probabilities, and it failed completely: unknown passages
-routinely produced \emph{high}-confidence predictions for one of the five
-authors, so a confidence threshold caught essentially none of them. Giving the
-network labelled ``none'' examples and letting it learn the boundary directly is
-far more effective --- here, perfectly so.
+Why add a class instead of simply flagging low-confidence predictions from a
+closed-set five-author model as ``unknown''? We tried that indirect route,
+thresholding the five-class softmax probabilities, and it failed completely:
+unknown passages routinely produced \emph{high}-confidence predictions for one
+of the five authors, so a confidence threshold caught essentially none of them.
+Giving the network labelled ``none'' examples and letting it learn the boundary
+directly is far more effective --- here, perfectly so. The contrast against 15
+stylistically diverse ``other'' authors also appears to \emph{sharpen} the
+boundaries among the five targets: the model learns not just what each target
+author looks like, but what they do \emph{not} look like.
 \end{keybox}
-
-\paragraph{Why does adding a class \emph{help}?}
-Counter-intuitively, the 6-class model out-performs the 5-class one
-($0.949$ vs.\ $0.931$ accuracy). Two factors contribute. First, the perfectly
-separable \code{none} class adds 30 easy test passages, lifting the average.
-Second, and more interestingly, the contrast against 15 stylistically diverse
-``other'' authors appears to sharpen the boundaries among the five targets
-rather than blur them: the model learns not just what each target author looks
-like, but what they do \emph{not} look like.
 
 % =============================================================================
 \section{How Deep Should the Network Be?}
@@ -366,34 +312,32 @@ like, but what they do \emph{not} look like.
 
 A natural instinct is that deeper networks are more powerful, so they should
 classify better. Our grid search says otherwise. Figure~\ref{fig:depth} plots
-dev accuracy against depth for each feature subset, on both the 5-class task of
-Section~\ref{sec:fiveauthors} and the 6-class task of Section~\ref{sec:openset}.
+validation accuracy against depth for each feature subset.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/depth_effect.png}
-  \caption{Dev accuracy vs.\ network depth (number of 64-unit hidden layers, log
+  \includegraphics[width=0.7\linewidth]{../src/neural_network/outputs/depth_effect.png}
+  \caption{Validation accuracy vs.\ network depth (number of 64-unit hidden layers, log
   scale). Performance is flat-to-slightly-declining from depth 1 to depth 10,
-  then \textbf{collapses to chance at depth 50} on both tasks.}
+  then \textbf{collapses to chance at depth 50}.}
   \label{fig:depth}
 \end{figure}
 
 From depth 1 to depth 10 accuracy barely moves --- the extra layers buy nothing
-because the decision boundaries between these authors are already well within
+because the decision boundaries between these classes are already well within
 reach of a shallow network on 107 informative features. At depth 50 every
-configuration collapses: dev accuracy falls to $0.207$ (5-class) and $0.171$
-(6-class), essentially the random baselines of $1/5=0.20$ and $1/6=0.167$. The
-network has stopped learning anything.
+configuration collapses: validation accuracy falls to $0.171$, essentially the random
+baseline of $1/6\approx0.167$. The network has stopped learning anything.
 
 \begin{keybox}[title=Why the deep network fails]
 This is not over-fitting --- an over-fit network would still score well above
-chance on dev. It is an \emph{optimisation} failure. Stacking 50 plain
+chance on validation. It is an \emph{optimisation} failure. Stacking 50 plain
 fully-connected ReLU layers with no residual connections or normalisation
 produces vanishing gradients: the error signal is attenuated layer by layer
 during backpropagation, so the early layers receive almost no useful gradient.
 Combined with early stopping on a small dataset, training halts before the
 network escapes its near-random initialisation. The lesson is concrete: for
-tabular stylometric features, \textbf{a shallow MLP is not just sufficient but
+tabular stylometric features, \textbf{a shallow NN is not just sufficient but
 preferable}.
 \end{keybox}
 
@@ -403,13 +347,13 @@ the same architecture in numpy --- Glorot-uniform initialisation with bound
 $\sqrt{6/(\text{fan\_in}+\text{fan\_out})}$ (exactly what \code{sklearn} uses for
 ReLU layers), ReLU hidden units, softmax output, cross-entropy loss --- and read
 off the gradient of the loss with respect to every layer's weights from a single
-forward/backward pass on the standardised 5-class features. Averaging over 50
-random initialisations, Figure~\ref{fig:grad} reports the root-mean-square (RMS)
-of the weight gradients at each layer, at the moment training begins.
+forward/backward pass on the standardised features. Averaging over 50 random
+initialisations, Figure~\ref{fig:grad} reports the root-mean-square (RMS) of the
+weight gradients at each layer, at the moment training begins.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/gradient_health.png}
+  \includegraphics[width=0.95\linewidth]{../src/neural_network/outputs/gradient_health.png}
   \caption{Gradient health at initialisation. \textit{Left}: RMS weight gradient
   per layer, from the input-facing layer (1) to the output-facing layer, one
   curve per depth (log scale). \textit{Right}: the gradient reaching the
@@ -455,50 +399,15 @@ initialisation) all exist precisely to keep this gradient alive; none are
 warranted here, because the shallow network already solves the task.
 
 % =============================================================================
-\section{How Stable Is the Result Across Seeds?}
-\label{sec:seeds}
-
-A single train/test split with a single weight initialisation gives one number.
-Would we get the same accuracy if we reshuffled the split or re-initialised the
-network? Both depend on a random seed (\code{random\_state}), which fixes the
-stratified 80/20 train$+$dev / test partition and the starting weights. To
-gauge stability we retrain the selected configuration (all 107 features, depth
-1) under ten seeds, $(42, 100, 200, \ldots, 900)$, and record the test accuracy
-each time. The dataset itself --- including the fixed ``none'' class of
-Section~\ref{sec:openset} --- is held constant, so the spread reflects
-split-and-initialisation noise rather than which passages happen to be sampled.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.95\linewidth]{../outputs/neural_network/seed_stability.png}
-  \caption{Test accuracy of the selected MLP across ten seeds. The dashed line is
-  the mean; the shaded band is $\pm 1$ standard deviation. Both tasks are tight:
-  $0.931 \pm 0.018$ (5-class) and $0.943 \pm 0.015$ (6-class).}
-  \label{fig:seeds}
-\end{figure}
-
-Across the ten seeds the 5-class model averages \textbf{$0.931$} test accuracy
-(standard deviation $0.018$, range $0.890$--$0.959$), and the 6-class model
-averages \textbf{$0.943$} (standard deviation $0.015$, range
-$0.909$--$0.960$). Two things are reassuring. First, the headline numbers we
-reported with \code{random\_state=42} ($0.931$ and $0.949$) sit right at or just
-above their respective means --- they are representative runs, not lucky ones.
-Second, the 6-class spread is \emph{tighter} than the 5-class spread despite the
-extra class, consistent with the perfectly-separable ``none'' class anchoring
-the decision boundaries. Even the worst seed in either sweep stays near $0.89$,
-far above the random baselines, so the model's strong performance is a property
-of the features and architecture, not of one fortunate split.
-
-% =============================================================================
 \section{Conclusion}
 
 A deliberately simple model --- a single hidden layer of 64 ReLU units on 107
-z-scored stylometric features --- attributes LessWrong passages to their author
-with $93\%$ accuracy across five authors and $95\%$ across six, the sixth being
-an open-set ``none of the above'' class it recognises perfectly. Depth does not
-help and, past a point, destroys the model outright. The supervised picture is
-sharper than the unsupervised one: where K-means recovered ten-author structure
-at ARI~$\approx 0.55$, a labelled MLP separates a handful of authors almost
+z-scored stylometric features --- attributes LessWrong passages to one of five
+authors or to an open-set ``none of the above'' class with $95\%$ accuracy,
+recognising the unknown-author class \emph{perfectly}. Depth does not help and,
+past a point, destroys the model outright. The supervised picture is sharper
+than the unsupervised one: where K-means recovered ten-author structure at
+ARI~$\approx 0.55$, a labelled NN separates a handful of authors almost
 cleanly, confirming that the stylistic signal is strong and largely
 linearly-accessible once the right features are in hand.
 
@@ -506,10 +415,12 @@ linearly-accessible once the right features are in hand.
 \section{Setup and Reproducibility}
 \label{sec:setup}
 
-All experiments run on CPU in well under a minute each. The code lives in two
-folders: \code{neural\_network/} (5-class) and \code{neural\_network\_6class/}
-(open-set 6-class). The report figures are produced by
-\code{make\_report\_figures.py} and \code{gradient\_diagnostics.py}.
+All experiments run on CPU in well under a minute each. The module lives in
+\code{src/neural\_network/}, organised into \code{data/} (the feature CSV and
+the \code{cleaned\_5} / \code{cleaned\_35} article sets), \code{scripts/} (all
+Python), and \code{outputs/} (every figure plus \code{results.md}). The report
+figures are produced by \code{make\_report\_figures.py} and
+\code{gradient\_diagnostics.py}.
 
 \paragraph{Dependencies.}
 Python~$\geq 3.10$ with a handful of scientific packages:
@@ -517,9 +428,9 @@ Python~$\geq 3.10$ with a handful of scientific packages:
   \item \code{numpy}, \code{pandas} --- data handling
   \item \code{scikit-learn} --- \code{MLPClassifier}, splitting, scaling, metrics
   \item \code{matplotlib} --- all figures
-  \item \code{nltk} --- tokenisation / POS-tagging when building the 6-class
-        ``none'' class from raw articles (a regex fallback is used if NLTK data
-        is unavailable)
+  \item \code{nltk} --- tokenisation / POS-tagging when building the ``none''
+        class from raw articles (a regex fallback is used if NLTK data is
+        unavailable)
 \end{itemize}
 
 \paragraph{Install.}
@@ -531,28 +442,22 @@ python -m venv .venv
 pip install numpy pandas scikit-learn matplotlib nltk
 \end{lstlisting}
 
-\paragraph{Run the models.}
-Each script trains the full feature-subset $\times$ depth grid, selects on the
-dev split, retrains the winner, and writes \code{results.md} plus \code{roc.png}
-next to itself.
+\paragraph{Run the model.}
+The script builds the ``none'' class, merges, trains the full feature-subset
+$\times$ depth grid, selects on the validation split, retrains the winner, and writes
+\code{results.md} into \code{outputs/}.
 \begin{lstlisting}[style=shell]
-# 5-class MLP  ->  neural_network/results.md, roc.png
-cd neural_network
-python neural_network_code.py
-
-# 6-class open-set MLP  ->  neural_network_6class/results.md, roc.png
-cd ../neural_network_6class
-python neural_network_6class.py
+cd src/neural_network/scripts
+python neural_network_code.py     # -> ../outputs/results.md
 \end{lstlisting}
 
 \paragraph{Regenerate the report figures.}
-This reproduces most figures in this document --- dev-selection heatmaps, the
-depth-effect plot, confusion matrices, ROC curves, and the seed-stability
-sweep --- into \code{outputs/neural\_network/}. The gradient-health diagnostic
-(Figure~\ref{fig:grad}, Table~\ref{tab:grad}) is a separate script.
+This reproduces the validation-selection heatmap, the depth-effect plot, and the
+confusion matrix into \code{src/neural\_network/outputs/}. The gradient-health
+diagnostic (Figure~\ref{fig:grad}, Table~\ref{tab:grad}) is a separate script.
 \begin{lstlisting}[style=shell]
-cd neural_network
-python make_report_figures.py      # heatmaps, depth, confusion, ROC, seed stability
+cd src/neural_network/scripts
+python make_report_figures.py      # validation selection, depth, confusion
 python gradient_diagnostics.py     # per-layer gradient health -> gradient_health.png
 \end{lstlisting}
 
