@@ -29,7 +29,7 @@ def load_json_files_from_dir(target_dir, folder_type):
         c1 = 0  # Cột trái (Bài mới)
         c2 = 0  # Cột phải (Bài cũ)
         
-        # Chỉ chia năm đối với thư mục cleaned_5 và cleaned_10
+        # Chia năm đối với cleaned_5 và cleaned_10
         if folder_type in ['cleaned_5', 'cleaned_10']:
             for article in data:
                 date_str = article.get("date", "")

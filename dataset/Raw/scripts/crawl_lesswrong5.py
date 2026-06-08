@@ -18,13 +18,13 @@ def clean_html(html_str):
     return soup.get_text(separator=' ', strip=True)
 
 def scrape_lesswrong_api(slug, min_words):
-    print(f"\n🚀 KHỞI ĐỘNG CỖ MÁY GRAPHQL API CHO TÁC GIẢ: {slug.upper()}")
+    print(f"\n🚀 CRAWL GRAPHQL API CHO TÁC GIẢ: {slug.upper()}")
     url = "https://www.lesswrong.com/graphql"
     
     target_new = 5    # 5 bài >= 2025
     target_old = 145  # 145 bài <= 2024
     
-    # --- BƯỚC 1: Lấy User ID ---
+    # 1: Lấy User ID
     print("🔍 Đang truy tìm ID hệ thống của tác giả...")
     query_user = """
     query GetUser($slug: String) {
@@ -41,7 +41,7 @@ def scrape_lesswrong_api(slug, min_words):
         print("❌ Lỗi: Không tìm thấy tác giả này. Hãy kiểm tra lại link!")
         return
 
-    # --- BƯỚC 2: CÀO PHÂN LÔ TỪ API ---
+    # 2: crawl phân lô từ api
     print("⚡ Đang tải lịch sử bài viết (Chia thành từng lô 100 bài)...")
     posts = []
     offset = 0
@@ -80,7 +80,7 @@ def scrape_lesswrong_api(slug, min_words):
         
     print(f"\n✅ Đã tải về thành công toàn bộ {len(posts)} bài viết của tác giả!\n")
 
-    # --- BƯỚC 3: Dọn rác, Đếm từ và Chia Giỏ ---
+    # 3: Dọn rác, Đếm từ và chia khoảng
     count_old = 0
     count_new = 0
     articles_data = []
@@ -96,7 +96,7 @@ def scrape_lesswrong_api(slug, min_words):
         date_str = date_str[:10]
         year = int(date_str[:4])
         
-        # --- LOGIC PHÂN LOẠI NĂM MỚI ---
+        # Phân loại năm
         is_old_group = False
         if year <= 2024:
             if count_old >= target_old: 
@@ -107,7 +107,6 @@ def scrape_lesswrong_api(slug, min_words):
                 continue # Nếu giỏ mới đã đủ 5 bài thì bỏ qua
             is_old_group = False
         else:
-            # Sẽ không bao giờ rơi vào trường hợp này nữa vì <= 2024 và >= 2025 đã bao trùm mọi năm
             continue 
             
         clean_text = clean_html(post.get('htmlBody', ''))
@@ -132,10 +131,9 @@ def scrape_lesswrong_api(slug, min_words):
             count_new += 1
             print(f"  ✅ [>= 2025] Đã lưu! (Năm {year} | {word_count} từ) - Tiến độ: {count_new}/{target_new}")
 
-    # --- BƯỚC 4: Xuất file JSON ---
+    # 4: Xuất file JSON
     output_filename = f"lesswrong_{slug}_data.json"
-    
-    # --- CODE MỚI ---
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     target_dir = os.path.join(os.path.dirname(script_dir), "Dataset", "lesswrong5")
     os.makedirs(target_dir, exist_ok=True)
@@ -143,7 +141,7 @@ def scrape_lesswrong_api(slug, min_words):
     
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(articles_data, f, indent=2, ensure_ascii=False)
-    # ----------------
+
         
     print("\n" + "="*50)
     print("📈 BÁO CÁO KẾT QUẢ THU THẬP TỪ API:")

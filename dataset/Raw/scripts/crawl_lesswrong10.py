@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import time
 import os
 
-# ================= CONFIG =================
+# CONFIG
 MIN_ARTICLES = 20
 MAX_ARTICLES = 40
 GRAPHQL_URL = "https://www.lesswrong.com/graphql"
@@ -16,7 +16,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# ================= UTILS =================
+# UTILS
 def count_words_accurately(text):
     words = re.findall(r"\b[\w'-]+\b", text)
     return len(words)
@@ -29,14 +29,14 @@ def clean_html(html_str):
     for a_tag in soup.find_all('a'): a_tag.unwrap()
     return soup.get_text(separator=' ', strip=True)
 
-# ================= CORE =================
+# CORE
 def scrape_single_author(slug, min_words):
     articles_recent = [] # Chỉ chứa bài >= 2024
     articles_old = []    # Chỉ chứa bài <= 2022
 
     print(f"\n⏳ Đang xử lý author: {slug}")
 
-    # --- 1. Get user ID ---
+    # 1. Get user ID 
     query_user = """
     query GetUser($slug: String) {
       user(input: {selector: {slug: $slug}}) {
@@ -62,11 +62,11 @@ def scrape_single_author(slug, min_words):
         print(f"  ❌ Lỗi kết nối API: {e}")
         return False, 0, 0
 
-    # --- 2. Crawl posts ---
+    # 2. Crawl posts
     offset = 0
     limit = 100
     
-    # Vòng lặp sẽ tiếp tục CHỈ KHI ít nhất 1 trong 2 nhóm chưa đạt đủ MAX (40 bài)
+    # Vòng lặp sẽ tiếp tục khi ít nhất 1 trong 2 nhóm chưa đạt đủ MAX
     while len(articles_recent) < MAX_ARTICLES or len(articles_old) < MAX_ARTICLES:
         query_posts = """
         query GetPosts($userId: String, $limit: Int, $offset: Int) {
@@ -85,8 +85,8 @@ def scrape_single_author(slug, min_words):
         except:
             break
 
-        if not batch: 
-            break # Hết bài viết của tác giả này
+        if not batch:  # Hết bài của tác giả này
+            break
 
         for post in batch:
             # Nếu cả 2 nhóm đều đã chạm mốc 40, dừng duyệt thêm
@@ -98,15 +98,14 @@ def scrape_single_author(slug, min_words):
             try: year = int(date_str[:4])
             except: continue
 
-            # KIỂM TRA ĐIỀU KIỆN ĐỘC LẬP TỪNG NHÓM
+            # kiểm tra điều kiện từng nhóm
             if year >= 2024 and len(articles_recent) < MAX_ARTICLES:
                 target_list = articles_recent
                 label = ">=2024"
             elif year <= 2022 and len(articles_old) < MAX_ARTICLES:
                 target_list = articles_old
                 label = "<=2022"
-            else:
-                # Nếu không thuộc năm yêu cầu, hoặc nhóm đó đã gom đủ 40 bài -> Bỏ qua
+            else: # Bỏ qua nếu không đạt yêu cầu
                 continue
 
             clean_text = clean_html(post.get('htmlBody', ''))
@@ -115,7 +114,7 @@ def scrape_single_author(slug, min_words):
             if word_count < min_words: 
                 continue
 
-            # Đưa bài vào danh sách tương ứng
+            # Đưa bài vào danh sách
             target_list.append({
                 "author": slug,
                 "text": clean_text,
@@ -124,20 +123,18 @@ def scrape_single_author(slug, min_words):
                 "date": date_str,
             })
             
-            # In tiến độ ĐỘC LẬP của từng nhóm
+            # In tiến độ từng nhóm
             print(f"    ✅ Đã lấy 1 bài {label} | Năm: {year} | Số từ: {word_count}")
             print(f"        Tiến độ: [>=2024: {len(articles_recent)}/{MAX_ARTICLES} bài] --- [<=2022: {len(articles_old)}/{MAX_ARTICLES} bài]")
 
         offset += limit
         time.sleep(0.5)
 
-    # --- 3. Đánh giá kết quả (Điều kiện độc lập) ---
-    # PHẢI THỎA MÃN ĐỒNG THỜI: nhóm recent >= 20 VÀ nhóm old >= 20
+    # 3. Đánh giá kết quả
+    # thỏa mãn: nhóm recent >= 20 VÀ nhóm old >= 20
     if len(articles_recent) >= MIN_ARTICLES and len(articles_old) >= MIN_ARTICLES:
         all_articles = articles_recent + articles_old
         filename = f"lesswrong_{slug}_data.json"
-        
-        # --- CODE MỚI ---
         script_dir = os.path.dirname(os.path.abspath(__file__))
         target_dir = os.path.join(os.path.dirname(script_dir), "Dataset", "lesswrong10")
         os.makedirs(target_dir, exist_ok=True)
@@ -145,7 +142,6 @@ def scrape_single_author(slug, min_words):
         
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(all_articles, f, indent=2, ensure_ascii=False)
-        # ----------------
         
         print(f"\n  🎉 THÀNH CÔNG: Đã lưu tổng cộng {len(all_articles)} bài viết (Trong đó: {len(articles_recent)} bài mới, {len(articles_old)} bài cũ)")
         return True, len(articles_recent), len(articles_old)
@@ -154,11 +150,10 @@ def scrape_single_author(slug, min_words):
         print(f"     Thực tế gom được: >=2024 có {len(articles_recent)} bài | <=2022 có {len(articles_old)} bài.")
         return False, len(articles_recent), len(articles_old)
 
-# ================= MAIN =================
+
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     json_file = os.path.join(script_dir, 'link.json')
-    # ----------------
     
     if not os.path.exists(json_file):
         print(f"❌ Không tìm thấy file {json_file}")

@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import time
 import os
 
-# ================= CONFIG =================
+# CONFIG
 MIN_ARTICLES = 30
 MAX_ARTICLES = 50
 GRAPHQL_URL = "https://www.lesswrong.com/graphql"
@@ -16,7 +16,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# ================= UTILS =================
+# UTILS
 def count_words_accurately(text):
     words = re.findall(r"\b[\w'-]+\b", text)
     return len(words)
@@ -29,13 +29,13 @@ def clean_html(html_str):
     for a_tag in soup.find_all('a'): a_tag.unwrap()
     return soup.get_text(separator=' ', strip=True)
 
-# ================= CORE =================
+# CORE
 def scrape_single_author(slug, min_words):
     articles = []
 
     print(f"\n⏳ Đang xử lý author: {slug}")
 
-    # --- 1. Get user ID ---
+    # 1. Get user ID
     query_user = """
     query GetUser($slug: String) {
       user(input: {selector: {slug: $slug}}) {
@@ -61,11 +61,11 @@ def scrape_single_author(slug, min_words):
         print(f"  ❌ Lỗi kết nối API: {e}")
         return False, 0
 
-    # --- 2. Crawl posts ---
+    # 2. Crawl posts
     offset = 0
     limit = 100
     
-    # Vòng lặp sẽ tiếp tục cho đến khi gom đủ MAX (50 bài)
+    # Vòng lặp sẽ tiếp tục cho đến khi gom đủ MAX
     while len(articles) < MAX_ARTICLES:
         query_posts = """
         query GetPosts($userId: String, $limit: Int, $offset: Int) {
@@ -85,10 +85,10 @@ def scrape_single_author(slug, min_words):
             break
 
         if not batch: 
-            break # Hết bài viết của tác giả này
+            break # Hết bài của tác giả này
 
         for post in batch:
-            # Nếu đã chạm mốc MAX_ARTICLES, dừng duyệt thêm
+            # dừng duyệt nếu đạt MAX_ARTICLES
             if len(articles) >= MAX_ARTICLES:
                 break
 
@@ -116,12 +116,10 @@ def scrape_single_author(slug, min_words):
         offset += limit
         time.sleep(0.5)
 
-    # --- 3. Đánh giá kết quả ---
-    # Phải đạt đủ số bài tối thiểu
+    # 3. Đánh giá kết quả
+    # Phải đạt đủ số bài MIN_ARTICLES
     if len(articles) >= MIN_ARTICLES:
         filename = f"lesswrong_{slug}_data.json"
-        
-        # --- CODE MỚI ---
         script_dir = os.path.dirname(os.path.abspath(__file__))
         target_dir = os.path.join(os.path.dirname(script_dir), "Dataset", "lesswrong35")
         os.makedirs(target_dir, exist_ok=True)
@@ -129,7 +127,6 @@ def scrape_single_author(slug, min_words):
         
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(articles, f, indent=2, ensure_ascii=False)
-        # ----------------
         
         print(f"\n  🎉 THÀNH CÔNG: Đã lưu tổng cộng {len(articles)} bài viết.")
         return True, len(articles)
@@ -138,7 +135,7 @@ def scrape_single_author(slug, min_words):
         print(f"     Thực tế gom được: {len(articles)} bài.")
         return False, len(articles)
 
-# ================= MAIN =================
+
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     json_file = os.path.join(script_dir, 'link.json')
