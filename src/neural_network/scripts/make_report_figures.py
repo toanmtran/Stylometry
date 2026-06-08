@@ -1,8 +1,8 @@
 """
-Generate report figures for the open-set NN authorship-attribution write-up.
+Generate report figures for the six-class NN authorship-attribution write-up.
 
 No outlier removal: every experiment uses the FULL feature matrix.
-Reproduces the validation-set grid search for the 6-class (open-set) task, then saves
+Reproduces the validation-set grid search for the 6-class task, then saves
 to ../outputs/:
 
   validation_selection.png   depth_effect.png   confusion.png
@@ -177,7 +177,7 @@ def run_grid(df):
                                 output_dict=True, zero_division=0)
     cm = confusion_matrix(y_te, y_pred)
 
-    print(f"\n=== open-set 6-class (full) ===")
+    print(f"\n=== six-class (full) ===")
     print(f"  splits: train={len(idx_tr)} val={len(idx_val)} test={len(idx_te)} total={len(df)}")
     print(f"  best: {best['sub']} x {best['cfg']}  val={best['val']:.4f}")
     print(f"  test acc={test_acc:.4f}  wf1={rep['weighted avg']['f1-score']:.4f}")

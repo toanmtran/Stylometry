@@ -1,5 +1,5 @@
 """
-Build the Neural Network slide deck (open-set, 6-class authorship attribution).
+Build the Neural Network slide deck (six-class authorship attribution).
 
 Style mirrors the existing K-means / SVM sections of the group deck:
   * warm off-white background, minimalist look
@@ -232,9 +232,9 @@ page_no(s, page); page += 1
 s = add_slide()
 dash(s)
 running_title(s)
-subtitle(s, "The Task: Open-Set Attribution")
+subtitle(s, "The Task: Six-Class Attribution")
 bullets(s, [
-    ("5 known authors + a 6th “none” class", " — open-set recognition, not forced choice"),
+    ("5 known authors + a 6th “none” class", " — the model can decline, not forced to pick"),
     ("873 passages", ", each described by 107 stylometric features"),
     ("Neural network", " — ReLU hidden units, softmax over 6 classes"),
     ("Adam optimizer", ", cross-entropy loss, early stopping"),
@@ -306,7 +306,7 @@ content_slide(
 s = add_slide()
 dash(s)
 running_title(s)
-subtitle(s, "Results — Open Set (Six Classes)")
+subtitle(s, "Results — Six Classes")
 chip(s, 0.62, 3.05, 1.72, "Test accuracy", "94.9%")
 chip(s, 2.46, 3.05, 1.72, "Weighted F1", "0.949")
 chip(s, 0.62, 4.15, 1.72, "Classes", "6")
@@ -395,7 +395,7 @@ bullets(s, [
     ("107 stylometric features", " carry enough signal — no deep network needed"),
     ("Random Forest permutation importance", " picks the most informative features"),
     ("Depth hurts", ": vanishing gradients stall the 50-layer net at initialization"),
-    ("Open-set works", ": a dedicated “none” class is recovered perfectly")],
+    ("The “none” class works", ": unknown passages never leak into a known author")],
     size=15, y=3.2, w=11.8, h=3.8, gap=12)
 page_no(s, page); page += 1
 

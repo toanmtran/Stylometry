@@ -1,5 +1,5 @@
 """
-MLP Authorship Classifier - open-set (6-class) attribution.
+MLP Authorship Classifier - six-class attribution.
 
 Five known LessWrong authors plus a synthetic sixth class,
 ``none_of_the_5_authors``, so the model can say "written by none of the five"

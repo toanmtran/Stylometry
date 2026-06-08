@@ -112,12 +112,12 @@ above''.}
 \section{Classifying Authors with an NN}
 \label{sec:model}
 
-\paragraph{The open-set task.}
-A closed-set classifier assumes every passage was written by one of the known
+\paragraph{The task.}
+A five-author classifier assumes every passage was written by one of the known
 authors. In the real world that assumption fails: a passage may come from an
-\emph{unknown} author, and a closed-set model will confidently mislabel it as
-whichever known author it resembles most. We therefore pose the problem as
-\textbf{open-set} recognition from the outset: five known LessWrong authors plus
+\emph{unknown} author, and a five-author model will confidently mislabel it as
+whichever known author it resembles most. We therefore treat it as a plain
+\textbf{six-class} classification problem: the five known LessWrong authors plus
 an explicit sixth class, \code{none\_of\_the\_5\_authors}, that the network must
 learn to recognise.
 
@@ -295,7 +295,7 @@ perfectly.
 
 \begin{keybox}[title=Direct training beats indirect thresholding]
 Why add a class instead of simply flagging low-confidence predictions from a
-closed-set five-author model as ``unknown''? We tried that indirect route,
+five-author model as ``unknown''? We tried that indirect route,
 thresholding the five-class softmax probabilities, and it failed completely:
 unknown passages routinely produced \emph{high}-confidence predictions for one
 of the five authors, so a confidence threshold caught essentially none of them.
@@ -403,7 +403,7 @@ warranted here, because the shallow network already solves the task.
 
 A deliberately simple model --- a single hidden layer of 64 ReLU units on 107
 z-scored stylometric features --- attributes LessWrong passages to one of five
-authors or to an open-set ``none of the above'' class with $95\%$ accuracy,
+authors or to a ``none of the above'' class with $95\%$ accuracy,
 recognising the unknown-author class \emph{perfectly}. Depth does not help and,
 past a point, destroys the model outright. The supervised picture is sharper
 than the unsupervised one: where K-means recovered ten-author structure at
