@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.1)  7 JUN 2026 18:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.1)  9 JUN 2026 02:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1207,183 +1207,146 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 10.95pt on input line 108.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 108.
+(Font)              scaled to size 10.95pt on input line 109.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 14.4pt on input line 111.
+(Font)              scaled to size 14.4pt on input line 112.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 14.4pt on input line 111.
+(Font)              scaled to size 14.4pt on input line 112.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 10.95pt on input line 114.
-LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 11
-5.
+(Font)              scaled to size 10.95pt on input line 115.
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 12
+1.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/inconsolata\t1zi4.fd
 File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 )
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 10.07397pt on input line 115.
+(Font)              scaled to size 10.07397pt on input line 121.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zi4' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 115.
+(Font)              scaled to size 9.19998pt on input line 121.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 127.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.0pt on input line 168.
+(Font)              scaled to size 10.0pt on input line 184.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 168.
+(Font)              <10> on input line 184.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 168.
+(Font)              <7> on input line 184.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 168.
+(Font)              <5> on input line 184.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 10.0pt on input line 179.
+(Font)              scaled to size 10.0pt on input line 195.
 
 [1
 
 {C:/Users/vuthe/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/vuth
 e/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{C:/Users/vuthe/Ap
 pData/Local/Programs/MiKTeX/fonts/enc/dvips/newtx/ntx-ec-tlf.enc}{C:/Users/vuth
-e/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Users/vuth
 e/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/inconsolata/i4-t1-0.enc}{C:/Use
 rs/vuthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}{C:/Users/v
+uthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Users/v
 uthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Users/v
 uthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}]
-<../outputs/neural_network/dev_selection_5class.png, id=93, 462.528pt x 245.718
-pt>
-File: ../outputs/neural_network/dev_selection_5class.png Graphic file (type png
-)
-<use ../outputs/neural_network/dev_selection_5class.png>
-Package pdftex.def Info: ../outputs/neural_network/dev_selection_5class.png  us
-ed on input line 211.
-(pdftex.def)             Requested size: 366.40834pt x 194.66249pt.
-<../outputs/neural_network/confusion_5class.png, id=98, 404.712pt x 361.35pt>
-File: ../outputs/neural_network/confusion_5class.png Graphic file (type png)
-<use ../outputs/neural_network/confusion_5class.png>
-Package pdftex.def Info: ../outputs/neural_network/confusion_5class.png  used o
-n input line 251.
-(pdftex.def)             Requested size: 216.09045pt x 192.93713pt.
-LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 9.0pt on input line 252.
-LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 9.0pt on input line 252.
-<../outputs/neural_network/roc_5class.png, id=99, 505.89pt x 404.712pt>
-File: ../outputs/neural_network/roc_5class.png Graphic file (type png)
-<use ../outputs/neural_network/roc_5class.png>
-Package pdftex.def Info: ../outputs/neural_network/roc_5class.png  used on inpu
-t line 257.
-(pdftex.def)             Requested size: 244.27461pt x 195.42053pt.
+<../src/neural_network/outputs/rf_permutation_importance.png, id=79, 520.344pt 
+x 361.35pt>
+File: ../src/neural_network/outputs/rf_permutation_importance.png Graphic file 
+(type png)
+<use ../src/neural_network/outputs/rf_permutation_importance.png>
+Package pdftex.def Info: ../src/neural_network/outputs/rf_permutation_importanc
+e.png  used on input line 222.
+(pdftex.def)             Requested size: 338.22418pt x 234.89125pt.
 
-[2 <../outputs/neural_network/dev_selection_5class.png>]
-<../outputs/neural_network/dev_selection_6class.png, id=111, 462.528pt x 245.71
-8pt>
-File: ../outputs/neural_network/dev_selection_6class.png Graphic file (type png
-)
-<use ../outputs/neural_network/dev_selection_6class.png>
-Package pdftex.def Info: ../outputs/neural_network/dev_selection_6class.png  us
-ed on input line 295.
+[2 <../src/neural_network/outputs/rf_permutation_importance.png>]
+<../src/neural_network/outputs/validation_selection.png, id=92, 462.528pt x 245
+.718pt>
+File: ../src/neural_network/outputs/validation_selection.png Graphic file (type
+ png)
+<use ../src/neural_network/outputs/validation_selection.png>
+Package pdftex.def Info: ../src/neural_network/outputs/validation_selection.png
+  used on input line 251.
 (pdftex.def)             Requested size: 366.40834pt x 194.66249pt.
- [3 <../outputs/neural_network/confusion_5class.png> <../outputs/neural_network
-/roc_5class.png>]
-<../outputs/neural_network/confusion_6class.png, id=121, 404.712pt x 361.35pt>
-File: ../outputs/neural_network/confusion_6class.png Graphic file (type png)
-<use ../outputs/neural_network/confusion_6class.png>
-Package pdftex.def Info: ../outputs/neural_network/confusion_6class.png  used o
-n input line 329.
-(pdftex.def)             Requested size: 234.8775pt x 209.71547pt.
-LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 331.
-<../outputs/neural_network/roc_6class.png, id=122, 505.89pt x 404.712pt>
-File: ../outputs/neural_network/roc_6class.png Graphic file (type png)
-<use ../outputs/neural_network/roc_6class.png>
-Package pdftex.def Info: ../outputs/neural_network/roc_6class.png  used on inpu
-t line 336.
-(pdftex.def)             Requested size: 225.4804pt x 180.38342pt.
+<../src/neural_network/outputs/confusion.png, id=95, 404.712pt x 361.35pt>
+File: ../src/neural_network/outputs/confusion.png Graphic file (type png)
+<use ../src/neural_network/outputs/confusion.png>
+Package pdftex.def Info: ../src/neural_network/outputs/confusion.png  used on i
+nput line 290.
+(pdftex.def)             Requested size: 263.06166pt x 234.88574pt.
+ [3 <../src/neural_network/outputs/validation_selection.png>]
+<../src/neural_network/outputs/depth_effect.png, id=105, 462.528pt x 274.626pt>
 
-[4 <../outputs/neural_network/dev_selection_6class.png>]
-LaTeX Font Info:    Font shape `T1/ntxtlf/b/it' will be
-(Font)              scaled to size 10.95pt on input line 354.
-<../outputs/neural_network/depth_effect.png, id=132, 722.7pt x 274.626pt>
-File: ../outputs/neural_network/depth_effect.png Graphic file (type png)
-<use ../outputs/neural_network/depth_effect.png>
-Package pdftex.def Info: ../outputs/neural_network/depth_effect.png  used on in
-put line 374.
-(pdftex.def)             Requested size: 446.26582pt x 169.58331pt.
- [5 <../outputs/neural_network/confusion_6class.png> <../outputs/neural_network
-/roc_6class.png>]
+File: ../src/neural_network/outputs/depth_effect.png Graphic file (type png)
+<use ../src/neural_network/outputs/depth_effect.png>
+Package pdftex.def Info: ../src/neural_network/outputs/depth_effect.png  used o
+n input line 319.
+(pdftex.def)             Requested size: 328.82707pt x 195.24982pt.
+ [4 <../src/neural_network/outputs/confusion.png>]
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 8.0pt on input line 403.
+(Font)              scaled to size 8.0pt on input line 347.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 6.0pt on input line 403.
-<../outputs/neural_network/gradient_health.png, id=142, 794.97pt x 303.534pt>
-File: ../outputs/neural_network/gradient_health.png Graphic file (type png)
-<use ../outputs/neural_network/gradient_health.png>
-Package pdftex.def Info: ../outputs/neural_network/gradient_health.png  used on
- input line 412.
+(Font)              scaled to size 6.0pt on input line 347.
+<../src/neural_network/outputs/gradient_health.png, id=113, 794.97pt x 303.534p
+t>
+File: ../src/neural_network/outputs/gradient_health.png Graphic file (type png)
+
+<use ../src/neural_network/outputs/gradient_health.png>
+Package pdftex.def Info: ../src/neural_network/outputs/gradient_health.png  use
+d on input line 356.
 (pdftex.def)             Requested size: 446.26582pt x 170.39471pt.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 10.0pt on input line 417.
-
-[6 <../outputs/neural_network/depth_effect.png>]
-<../outputs/neural_network/seed_stability.png, id=151, 722.7pt x 274.626pt>
-File: ../outputs/neural_network/seed_stability.png Graphic file (type png)
-<use ../outputs/neural_network/seed_stability.png>
-Package pdftex.def Info: ../outputs/neural_network/seed_stability.png  used on 
-input line 473.
-(pdftex.def)             Requested size: 446.26582pt x 169.58331pt.
- [7 <../outputs/neural_network/gradient_health.png>]
+(Font)              scaled to size 10.0pt on input line 361.
+ [5 <../src/neural_network/outputs/depth_effect.png>]
+[6 <../src/neural_network/outputs/gradient_health.png>]
 LaTeX Font Info:    Trying to load font information for TS1+ntxtlf on input lin
-e 517.
+e 428.
 
 (C:\Users\vuthe\AppData\Local\Programs\MiKTeX\tex/latex/newtx\ts1ntxtlf.fd
 File: ts1ntxtlf.fd 2015/01/18 v1.0 fd file for TS1/ntxtlf
 )
 LaTeX Font Info:    Font shape `TS1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.95pt on input line 517.
+(Font)              scaled to size 10.95pt on input line 428.
 
-[8{C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-ts1.
-enc} <../outputs/neural_network/seed_stability.png>] [9]
-(neural_network_report.aux)
+[7{C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-ts1.
+enc}] (neural_network_report.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2020/03/25>
  ***********
 Package rerunfilecheck Info: File `neural_network_report.out' has not changed.
-(rerunfilecheck)             Checksum: 07083FF01D2E1A293F6A66EDF5E33C8D;1308.
+(rerunfilecheck)             Checksum: 24CB53EBF2950768BD92CD2FC1F9F184;685.
  ) 
 Here is how much of TeX's memory you used:
- 34155 strings out of 467870
- 683356 string characters out of 5418356
- 1264022 words of memory out of 5000000
- 62202 multiletter control sequences out of 15000+600000
- 748077 words of font info for 209 fonts, out of 8000000 for 9000
+ 34069 strings out of 467870
+ 681066 string characters out of 5418356
+ 1257209 words of memory out of 5000000
+ 62157 multiletter control sequences out of 15000+600000
+ 737814 words of font info for 191 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 102i,11n,117p,1212b,1257s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 102i,10n,117p,1212b,1257s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/inconsolata/
 Inconsolata-zi4r.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/lm/lmbx10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/lm/lmex10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/lm/lmmi10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/
-public/lm/lmmi7.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/p
-ublic/lm/lmmi8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/lm/lmr10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/pub
-lic/lm/lmr7.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/publi
-c/lm/lmr8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/
-lm/lmss9.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/l
-m/lmssbx10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/lm/lmsy10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/lm/lmsy8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/
-amsfonts/symbols/msbm10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts
-/type1/public/tex-gyre/qtmr.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/f
-onts/type1/public/newtx/ztmb.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/newtx/ztmbi.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTe
-X/fonts/type1/public/newtx/ztmr.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKT
-eX/fonts/type1/public/newtx/ztmri.pfb>
-Output written on neural_network_report.pdf (9 pages, 843232 bytes).
+public/lm/lmmi8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/lm/lmr10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/pu
+blic/lm/lmr7.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/lm/lmr8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/lm/lmss9.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+lm/lmssbx10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/lm/lmsy10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/lm/lmsy8.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/amsfonts/symbols/msbm10.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/font
+s/type1/public/tex-gyre/qtmr.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/newtx/ztmb.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/newtx/ztmr.pfb><C:/Users/vuthe/AppData/Local/Programs/MiKTe
+X/fonts/type1/public/newtx/ztmri.pfb>
+Output written on neural_network_report.pdf (7 pages, 617844 bytes).
 PDF statistics:
- 291 PDF objects out of 1000 (max. 8388607)
- 47 named destinations out of 1000 (max. 500000)
- 55546 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 237 PDF objects out of 1000 (max. 8388607)
+ 35 named destinations out of 1000 (max. 500000)
+ 48854 words of extra memory for PDF output out of 51595 (max. 10000000)
 
