@@ -1,1 +1,0 @@
-An open area for scripts built to organize data, manipulate data, create new datasets, view dataset stats, etc.

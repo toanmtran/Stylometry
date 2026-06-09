@@ -1,0 +1,125 @@
+Loading cleaned_10 corpus …
+  400 docs total, 10 authors  (20 pre + 20 post per author)
+
+ARI sweep: K=4, M=10, N=1500, 50 trials per era
+  group pool = C(10,4) = 210  per era
+  KMeans: init='k-means++', n_init=10
+
+=== era = pre ===
+  era=pre: 200 docs × 1500w  (10 authors)
+  Building stylometric feature matrix …
+  feature cache hit -> src\kmeans\cache\cleaned_10\314db074710cbbb8.npz
+  X shape: (200, 107)
+  [ pre] trial   1/50  ARI=+0.743  authors=['johnswentworth', 'raemon', 'ricraz', 'steve2152']
+  [ pre] trial   2/50  ARI=+0.776  authors=['abramdemski', 'johnswentworth', 'kaj_sotala', 'steve2152']
+  [ pre] trial   3/50  ARI=+0.590  authors=['abramdemski', 'johnswentworth', 'kaj_sotala', 'ricraz']
+  [ pre] trial   4/50  ARI=+0.741  authors=['abramdemski', 'johnswentworth', 'kaj_sotala', 'zvi']
+  [ pre] trial   5/50  ARI=+0.562  authors=['johnswentworth', 'neel-nanda-1', 'raemon', 'ruby']
+  [ pre] trial   6/50  ARI=+0.365  authors=['johnswentworth', 'raemon', 'ruby', 'zvi']
+  [ pre] trial   7/50  ARI=+0.431  authors=['jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1', 'steve2152']
+  [ pre] trial   8/50  ARI=+0.716  authors=['abramdemski', 'raemon', 'ricraz', 'ruby']
+  [ pre] trial   9/50  ARI=+0.594  authors=['jessica-liu-taylor', 'kaj_sotala', 'raemon', 'steve2152']
+  [ pre] trial  10/50  ARI=+0.932  authors=['kaj_sotala', 'neel-nanda-1', 'raemon', 'zvi']
+  [ pre] trial  11/50  ARI=+0.589  authors=['jessica-liu-taylor', 'raemon', 'ricraz', 'zvi']
+  [ pre] trial  12/50  ARI=+1.000  authors=['ricraz', 'ruby', 'steve2152', 'zvi']
+  [ pre] trial  13/50  ARI=+0.544  authors=['abramdemski', 'raemon', 'ruby', 'steve2152']
+  [ pre] trial  14/50  ARI=+0.561  authors=['jessica-liu-taylor', 'johnswentworth', 'steve2152', 'zvi']
+  [ pre] trial  15/50  ARI=+0.674  authors=['neel-nanda-1', 'raemon', 'ruby', 'steve2152']
+  [ pre] trial  16/50  ARI=+0.090  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'ruby']
+  [ pre] trial  17/50  ARI=+0.587  authors=['jessica-liu-taylor', 'johnswentworth', 'ricraz', 'zvi']
+  [ pre] trial  18/50  ARI=+0.467  authors=['johnswentworth', 'raemon', 'ruby', 'steve2152']
+  [ pre] trial  19/50  ARI=+0.358  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'zvi']
+  [ pre] trial  20/50  ARI=+0.467  authors=['raemon', 'ruby', 'steve2152', 'zvi']
+  [ pre] trial  21/50  ARI=+0.932  authors=['johnswentworth', 'neel-nanda-1', 'raemon', 'ricraz']
+  [ pre] trial  22/50  ARI=+0.630  authors=['kaj_sotala', 'raemon', 'ruby', 'zvi']
+  [ pre] trial  23/50  ARI=+0.288  authors=['abramdemski', 'jessica-liu-taylor', 'ricraz', 'ruby']
+  [ pre] trial  24/50  ARI=+1.000  authors=['johnswentworth', 'kaj_sotala', 'neel-nanda-1', 'zvi']
+  [ pre] trial  25/50  ARI=+0.867  authors=['johnswentworth', 'neel-nanda-1', 'raemon', 'steve2152']
+  [ pre] trial  26/50  ARI=+0.700  authors=['jessica-liu-taylor', 'kaj_sotala', 'neel-nanda-1', 'zvi']
+  [ pre] trial  27/50  ARI=+1.000  authors=['neel-nanda-1', 'ricraz', 'steve2152', 'zvi']
+  [ pre] trial  28/50  ARI=+0.932  authors=['neel-nanda-1', 'raemon', 'steve2152', 'zvi']
+  [ pre] trial  29/50  ARI=+0.540  authors=['jessica-liu-taylor', 'johnswentworth', 'raemon', 'zvi']
+  [ pre] trial  30/50  ARI=+1.000  authors=['abramdemski', 'neel-nanda-1', 'ricraz', 'zvi']
+  [ pre] trial  31/50  ARI=+0.621  authors=['abramdemski', 'johnswentworth', 'neel-nanda-1', 'ruby']
+  [ pre] trial  32/50  ARI=+1.000  authors=['abramdemski', 'kaj_sotala', 'steve2152', 'zvi']
+  [ pre] trial  33/50  ARI=+0.332  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'steve2152']
+  [ pre] trial  34/50  ARI=+0.675  authors=['kaj_sotala', 'ruby', 'steve2152', 'zvi']
+  [ pre] trial  35/50  ARI=+0.722  authors=['abramdemski', 'ricraz', 'ruby', 'zvi']
+  [ pre] trial  36/50  ARI=+0.223  authors=['abramdemski', 'johnswentworth', 'kaj_sotala', 'ruby']
+  [ pre] trial  37/50  ARI=+0.863  authors=['johnswentworth', 'kaj_sotala', 'neel-nanda-1', 'steve2152']
+  [ pre] trial  38/50  ARI=+0.932  authors=['abramdemski', 'neel-nanda-1', 'ruby', 'steve2152']
+  [ pre] trial  39/50  ARI=+0.711  authors=['abramdemski', 'ruby', 'steve2152', 'zvi']
+  [ pre] trial  40/50  ARI=+0.546  authors=['abramdemski', 'jessica-liu-taylor', 'raemon', 'steve2152']
+  [ pre] trial  41/50  ARI=+0.485  authors=['abramdemski', 'jessica-liu-taylor', 'raemon', 'ricraz']
+  [ pre] trial  42/50  ARI=+0.575  authors=['abramdemski', 'johnswentworth', 'ricraz', 'ruby']
+  [ pre] trial  43/50  ARI=+0.626  authors=['kaj_sotala', 'raemon', 'ricraz', 'ruby']
+  [ pre] trial  44/50  ARI=+0.521  authors=['kaj_sotala', 'neel-nanda-1', 'ricraz', 'ruby']
+  [ pre] trial  45/50  ARI=+0.637  authors=['jessica-liu-taylor', 'neel-nanda-1', 'raemon', 'ricraz']
+  [ pre] trial  46/50  ARI=+0.867  authors=['abramdemski', 'kaj_sotala', 'ruby', 'zvi']
+  [ pre] trial  47/50  ARI=+0.665  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1']
+  [ pre] trial  48/50  ARI=+0.527  authors=['kaj_sotala', 'ricraz', 'ruby', 'zvi']
+  [ pre] trial  49/50  ARI=+0.932  authors=['abramdemski', 'johnswentworth', 'neel-nanda-1', 'ricraz']
+  [ pre] trial  50/50  ARI=+0.706  authors=['raemon', 'ricraz', 'ruby', 'steve2152']
+
+=== era = post ===
+  era=post: 200 docs × 1500w  (10 authors)
+  Building stylometric feature matrix …
+  feature cache hit -> src\kmeans\cache\cleaned_10\75a2fb33fcd2292b.npz
+  X shape: (200, 107)
+  [post] trial   1/50  ARI=+0.544  authors=['raemon', 'ricraz', 'ruby', 'steve2152']
+  [post] trial   2/50  ARI=+0.475  authors=['johnswentworth', 'raemon', 'ruby', 'zvi']
+  [post] trial   3/50  ARI=+0.353  authors=['abramdemski', 'kaj_sotala', 'neel-nanda-1', 'ricraz']
+  [post] trial   4/50  ARI=+0.819  authors=['abramdemski', 'kaj_sotala', 'raemon', 'steve2152']
+  [post] trial   5/50  ARI=+0.492  authors=['kaj_sotala', 'ruby', 'steve2152', 'zvi']
+  [post] trial   6/50  ARI=+0.450  authors=['abramdemski', 'neel-nanda-1', 'ricraz', 'steve2152']
+  [post] trial   7/50  ARI=+0.598  authors=['johnswentworth', 'neel-nanda-1', 'ruby', 'steve2152']
+  [post] trial   8/50  ARI=+0.352  authors=['jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1', 'raemon']
+  [post] trial   9/50  ARI=+0.563  authors=['johnswentworth', 'kaj_sotala', 'raemon', 'ricraz']
+  [post] trial  10/50  ARI=+0.769  authors=['abramdemski', 'raemon', 'ruby', 'steve2152']
+  [post] trial  11/50  ARI=+0.742  authors=['jessica-liu-taylor', 'kaj_sotala', 'steve2152', 'zvi']
+  [post] trial  12/50  ARI=+0.457  authors=['johnswentworth', 'raemon', 'ricraz', 'ruby']
+  [post] trial  13/50  ARI=+0.331  authors=['jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1', 'steve2152']
+  [post] trial  14/50  ARI=+0.388  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1']
+  [post] trial  15/50  ARI=+0.453  authors=['abramdemski', 'jessica-liu-taylor', 'raemon', 'ruby']
+  [post] trial  16/50  ARI=+0.634  authors=['neel-nanda-1', 'ricraz', 'steve2152', 'zvi']
+  [post] trial  17/50  ARI=+0.797  authors=['johnswentworth', 'raemon', 'ricraz', 'steve2152']
+  [post] trial  18/50  ARI=+0.503  authors=['johnswentworth', 'ricraz', 'ruby', 'zvi']
+  [post] trial  19/50  ARI=+0.436  authors=['jessica-liu-taylor', 'kaj_sotala', 'neel-nanda-1', 'steve2152']
+  [post] trial  20/50  ARI=+0.370  authors=['abramdemski', 'jessica-liu-taylor', 'neel-nanda-1', 'steve2152']
+  [post] trial  21/50  ARI=+0.603  authors=['kaj_sotala', 'neel-nanda-1', 'raemon', 'steve2152']
+  [post] trial  22/50  ARI=+0.556  authors=['abramdemski', 'jessica-liu-taylor', 'neel-nanda-1', 'zvi']
+  [post] trial  23/50  ARI=+0.377  authors=['jessica-liu-taylor', 'johnswentworth', 'neel-nanda-1', 'ruby']
+  [post] trial  24/50  ARI=+0.481  authors=['johnswentworth', 'neel-nanda-1', 'ruby', 'zvi']
+  [post] trial  25/50  ARI=+1.000  authors=['abramdemski', 'johnswentworth', 'steve2152', 'zvi']
+  [post] trial  26/50  ARI=+0.626  authors=['abramdemski', 'jessica-liu-taylor', 'raemon', 'zvi']
+  [post] trial  27/50  ARI=+0.665  authors=['jessica-liu-taylor', 'neel-nanda-1', 'steve2152', 'zvi']
+  [post] trial  28/50  ARI=+1.000  authors=['johnswentworth', 'neel-nanda-1', 'steve2152', 'zvi']
+  [post] trial  29/50  ARI=+0.377  authors=['abramdemski', 'kaj_sotala', 'raemon', 'ruby']
+  [post] trial  30/50  ARI=+0.404  authors=['jessica-liu-taylor', 'kaj_sotala', 'neel-nanda-1', 'ruby']
+  [post] trial  31/50  ARI=+0.335  authors=['abramdemski', 'jessica-liu-taylor', 'kaj_sotala', 'raemon']
+  [post] trial  32/50  ARI=+0.329  authors=['jessica-liu-taylor', 'neel-nanda-1', 'ricraz', 'zvi']
+  [post] trial  33/50  ARI=+0.418  authors=['jessica-liu-taylor', 'johnswentworth', 'kaj_sotala', 'ruby']
+  [post] trial  34/50  ARI=+0.424  authors=['abramdemski', 'jessica-liu-taylor', 'johnswentworth', 'ruby']
+  [post] trial  35/50  ARI=+0.527  authors=['jessica-liu-taylor', 'kaj_sotala', 'ruby', 'steve2152']
+  [post] trial  36/50  ARI=+0.388  authors=['neel-nanda-1', 'raemon', 'ricraz', 'ruby']
+  [post] trial  37/50  ARI=+0.446  authors=['neel-nanda-1', 'raemon', 'ruby', 'steve2152']
+  [post] trial  38/50  ARI=+0.227  authors=['kaj_sotala', 'raemon', 'ruby', 'zvi']
+  [post] trial  39/50  ARI=+0.550  authors=['abramdemski', 'kaj_sotala', 'raemon', 'zvi']
+  [post] trial  40/50  ARI=+0.466  authors=['neel-nanda-1', 'ruby', 'steve2152', 'zvi']
+  [post] trial  41/50  ARI=+0.811  authors=['kaj_sotala', 'raemon', 'steve2152', 'zvi']
+  [post] trial  42/50  ARI=+0.406  authors=['jessica-liu-taylor', 'ricraz', 'ruby', 'steve2152']
+  [post] trial  43/50  ARI=+0.295  authors=['abramdemski', 'kaj_sotala', 'ricraz', 'ruby']
+  [post] trial  44/50  ARI=+0.586  authors=['abramdemski', 'johnswentworth', 'kaj_sotala', 'raemon']
+  [post] trial  45/50  ARI=+0.466  authors=['abramdemski', 'johnswentworth', 'ruby', 'zvi']
+  [post] trial  46/50  ARI=+0.527  authors=['jessica-liu-taylor', 'kaj_sotala', 'ricraz', 'zvi']
+  [post] trial  47/50  ARI=+0.518  authors=['abramdemski', 'ricraz', 'ruby', 'steve2152']
+  [post] trial  48/50  ARI=+0.417  authors=['abramdemski', 'jessica-liu-taylor', 'neel-nanda-1', 'ruby']
+  [post] trial  49/50  ARI=+0.520  authors=['johnswentworth', 'kaj_sotala', 'neel-nanda-1', 'raemon']
+  [post] trial  50/50  ARI=+1.000  authors=['abramdemski', 'kaj_sotala', 'steve2152', 'zvi']
+
+── ARI vs era summary ──
+    era    n    mean     std     min     max
+    pre   50  +0.657   0.216  +0.090  +1.000
+   post   50  +0.525   0.179  +0.227  +1.000
+
+Saved -> src\kmeans\outputs\effect_of_era\ari_vs_era.png

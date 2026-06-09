@@ -40,6 +40,8 @@
 \definecolor{softgray}{HTML}{F5F5F7}      % callout background
 \definecolor{rule}{HTML}{B7C2D0}          % thin separator
 \definecolor{codebg}{HTML}{F2F4F7}        % inline code background
+\definecolor{pagebg}{HTML}{F3F4F1}        % page background
+\pagecolor{pagebg}
 
 % ── Section formatting ────────────────────────────────────────────────────────
 \usepackage{titlesec}
@@ -95,13 +97,13 @@ to study this question is K-means.}
 We use the \textit{LessWrong 10 Authors} dataset: 10 authors, 40 articles
 each, evenly split across two periods (20 from $\leq 2022$, 20 from
 $\geq 2024$). To keep article length from masking the stylistic signal, we
-truncate every article to its first \textbf{1{,}526 words}, the global minimum
-length across the entire cleaned corpus, and discard anything past the cutoff.
+truncate every article to its first \textbf{1{,}500 words} and discard
+anything past the cutoff.
 
 \paragraph{Feature extraction.}
 We extract \textbf{107} known stylometric features per article using
-\code{NLTK} for tokenisation and POS-tagging (with a regex fallback when NLTK
-is unavailable). The features fall into seven groups:
+\code{NLTK} for tokenisation and POS-tagging. The features fall into seven
+groups:
 \begin{itemize}\setlength\itemsep{1pt}
   \item \textbf{Word and sentence length} statistics (mean, standard deviation,
         median, fractions of 1--6 character words, etc.)
@@ -163,7 +165,7 @@ The 400-article input matrix is $400 \times 107$ after feature extraction.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/cluster_10/clustering.png}
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/cluster_10/clustering.png}
   \caption{K-means on the LessWrong 10 Authors dataset, $K=10$. \textit{Top
   left}: articles projected onto the two PCA directions of largest variance
   (\code{sklearn.decomposition.PCA} applied to the centered, z-scored matrix),
@@ -175,7 +177,7 @@ The 400-article input matrix is $400 \times 107$ after feature extraction.
   \label{fig:cluster10}
 \end{figure}
 
-The clustering achieves \textbf{ARI = 0.55}, which is fairly impressive given
+The clustering achieves \textbf{ARI = 0.49}, which is fairly impressive given
 that we are trying to separate ten groups simultaneously. The confusion matrix
 shows a prominent diagonal: most authors land mostly in their own cluster.
 
@@ -203,7 +205,7 @@ The key issue is that all ten attempts are tied to one seed. Change the seed,
 and sklearn generates a different random-number sequence, produces a different
 pool of ten starting configurations, and may return a different ``best''
 clustering with a different ARI. With \code{random\_state=42} we obtained
-ARI $= 0.55$, but without running other seeds we cannot tell whether this is
+ARI $= 0.49$, but without running other seeds we cannot tell whether this is
 a typical outcome or a lucky one. To measure the variability, we treat each
 seed as an independent trial: for ten seed values $(42, 100, 200, \ldots, 900)$
 we run the same experiment and record the ARI of the lowest-distortion attempt.
@@ -282,36 +284,15 @@ with ARI. Running ten different seeds gives ten independent ARI measurements.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.78\linewidth]{../outputs/kmeans/cluster_10/ari_vs_seed.png}
+  \includegraphics[width=0.78\linewidth]{../src/kmeans/outputs/cluster_10/ari_vs_seed.png}
   \caption{ARI of the selected attempt (lowest $L$) across ten master seeds.
   Blue dots show the distortions of all ten attempts within each trial; the
   red star marks the one sklearn returns. The annotated value is that run's ARI.}
   \label{fig:seed_stability}
 \end{figure}
 
-Across the ten trials the mean ARI is \textbf{0.504}, ranging from \textbf{0.43}
-to \textbf{0.57}. Our initial result of 0.55 sits on the luckier side of the
-distribution, but it is close to the mean.
-
-\paragraph{Which features are doing the work?}
-For every feature we compute the ANOVA F-ratio (between-cluster variance
-divided by within-cluster variance) on the predicted clusters using our
-\code{f\_ratio} function in \code{src/clustering.py}. A high F-ratio means
-the feature separates clusters more than it varies inside them.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.72\linewidth]{../outputs/kmeans/cluster_10/top_features.png}
-  \caption{Top 20 discriminating features for the $K=10$ clustering, ranked
-  by ANOVA F-ratio. Single-character word rate (\code{word\_len\_1\_frac}),
-  Brunét's $W$, vocabulary size (\code{n\_vocab}), and POS distributions
-  dominate.}
-  \label{fig:topfeats}
-\end{figure}
-
-The strongest signals are how often an author uses one-letter words (mostly ``I'' and
-``a''), vocabulary richness, the noun/verb/pronoun mix, and average word
-length. None of these depend on what the article is \textit{about}.
+Across the ten trials the mean ARI is \textbf{0.475}, ranging from \textbf{0.42}
+to \textbf{0.53}. Our initial result of 0.49 sits close to the mean.
 
 % =============================================================================
 \section{Effect of Articles per Author ($M$)}
@@ -328,20 +309,20 @@ articles per author, the sample likely becomes a poor estimate of that author's 
 style, so we expect K-means performance to degrade as $M$ shrinks.
 
 \paragraph{Setup.}
-We reuse the \textit{LessWrong 10 Authors} corpus, fix $K=4$ and length $N=1{,}526$
+We reuse the \textit{LessWrong 10 Authors} corpus, fix $K=4$ and length $N=1{,}500$
 words, and sweep $M \in \{5, 10, 15, 20\}$. For each $M$ we run 50
 trials: sample 4 of the 10 authors at random, sample $M$ articles per author,
 truncate each at the first N words, extract features, cluster with 10 k-means ++ initializations, select the attempt with the lowest distortion, and record ARI.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_m/ari_vs_m_10authors.png}
-  \caption{ARI vs.\ $M$ on LessWrong 10 Authors ($K=4$, $N=1526$, 50 trials per
-  $M$). Mean ARI rises from $0.43$ at $M=5$ to $0.55$ at $M=20$.}
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_m/ari_vs_m_10authors.png}
+  \caption{ARI vs.\ $M$ on LessWrong 10 Authors ($K=4$, $N=1500$, 50 trials per
+  $M$). Mean ARI rises from $0.42$ at $M=5$ to $0.55$ at $M=20$.}
   \label{fig:m10}
 \end{figure}
 
-ARI rises steadily from $0.43$ at $M=5$ to $0.55$ at $M=20$, with the curve
+ARI rises steadily from $0.42$ at $M=5$ to $0.55$ at $M=20$, with the curve
 still climbing at the upper end of the sweep. It is unclear whether
 performance would continue to improve past $M=20$ or eventually saturate.
 
@@ -352,7 +333,7 @@ overlap across trials, so ARI variability will mostly reflect which author
 group was sampled rather than which articles. With 4 authors drawn from 10,
 trials already tend to share authors, so that
 source of variability is limited to begin with. Finding 10 or more LessWrong authors with
-that many qualifying articles (length $\geq 1{,}526$ words) turns out to be
+that many qualifying articles (length $\geq 1{,}500$ words) turns out to be
 difficult. We therefore restrict to a separate \textit{LessWrong 4 Authors}
 dataset, four specific authors for whom we were able to find 76--79 articles
 each. While any conclusions will be specific to these four authors, the
@@ -361,17 +342,18 @@ the effort.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_m/ari_vs_m_4authors.png}
-  \caption{ARI vs.\ $M$ on LessWrong 4 Authors ($K=4$, $N=1526$, 50 trials per
-  $M$). The curve climbs from $0.35$ at $M=5$ to $\sim 0.48$ near $M=30$, then
-  plateaus through $M=40$.}
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_m/ari_vs_m_4authors.png}
+  \caption{ARI vs.\ $M$ on LessWrong 4 Authors ($K=4$, $N=1500$, 50 trials per
+  $M$). The curve climbs from $0.34$ at $M=5$ to $\sim 0.46$ near $M=25$,
+  then plateaus through $M=40$.}
   \label{fig:m4}
 \end{figure}
 
-The pattern closely mirrors the 10-author case: mean ARI climbs from $0.35$
-to $0.47$ as $M$ goes from 5 to 25, then \textbf{flattens} between
-$M=25$ and $M=40$, hovering at $0.46$--$0.48$. On this kind of LessWrong corpus, collecting more than roughly
-30 articles per author appears to yield little extra clustering quality.
+The pattern closely mirrors the 10-author case: mean ARI climbs from $0.34$
+to $0.46$ as $M$ goes from 5 to 25, then \textbf{flattens} between
+$M=25$ and $M=40$, hovering near $0.46$. On this kind of LessWrong corpus,
+collecting more than roughly 25 articles per author appears to yield little
+extra clustering quality.
 
 % =============================================================================
 \section{Effect of Number of Authors ($K$)}
@@ -383,25 +365,26 @@ we must hold everything else fixed.
 
 \paragraph{Setup.}
 We use the \textit{LessWrong 35 Authors} dataset (35 authors, each with at
-least 27 articles of length $\geq 1{,}526$ words), fix $M=15$ articles per
-author and $N=1{,}526$ words, and sweep $K \in \{2, 4, 6, 8, 10, 12\}$. For
+least 27 articles of length $\geq 1{,}500$ words), fix $M=15$ articles per
+author and $N=1{,}500$ words, and sweep $K \in \{2, 4, 6, 8, 10, 12\}$. For
 each $K$ we run 100 trials: sample $K$ of the 35 authors at random,
 sample $M=15$ of each chosen author's articles, truncate to $N$ words,
 extract features, cluster with K-means++ (\code{n\_init=10}), record ARI.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_k/ari_vs_k.png}
-  \caption{ARI vs.\ $K$ on LessWrong 35 Authors ($M=15$, $N=1526$, 100 trials
-  per $K$). Mean ARI falls monotonically from $0.65$ at $K=2$ to $0.31$ at
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_k/ari_vs_k.png}
+  \caption{ARI vs.\ $K$ on LessWrong 35 Authors ($M=15$, $N=1500$, 100 trials
+  per $K$). Mean ARI falls monotonically from $0.40$ at $K=2$ to $0.20$ at
   $K=12$. The spread shrinks rapidly with $K$.}
   \label{fig:k}
 \end{figure}
 
 The downward trend is clear and, on this larger author pool, essentially
-monotone: mean ARI falls from $0.65$ at $K=2$ to $0.54$ at $K=4$, $0.47$ at
-$K=6$, $0.38$ at $K=8$, $0.36$ at $K=10$, and $0.31$ at $K=12$. The slope
-is steepest at small $K$ and flattens out by $K=10$.
+monotone: mean ARI falls from $0.40$ at $K=2$ to $0.32$ at $K=4$, $0.29$ at
+$K=6$, $0.26$ at $K=8$, $0.23$ at $K=10$, and $0.20$ at $K=12$. The slope
+is steepest between $K=2$ and $K=4$, then settles into a steady decline
+of roughly $0.03$ per additional cluster.
 
 The variance across trials also depends strongly on $K$. At $K=2$ the
 outcome is dominated by \emph{which} two authors are drawn: some pairs are
@@ -426,7 +409,7 @@ words, extract features, run K-means.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_n/ari_vs_n_10authors.png}
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_n/ari_vs_n_10authors.png}
   \caption{ARI vs.\ $N$ on LessWrong 10 Authors ($K=5$, $M=15$, 50 trials per
   $N$). ARI rises steeply from $0.07$ at $N=100$ to $0.48$ at $N=1500$.}
   \label{fig:n10}
@@ -444,7 +427,7 @@ ranges up to 3{,}000.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_n/ari_vs_n_5authors.png}
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_n/ari_vs_n_5authors.png}
   \caption{ARI vs.\ $N$ on LessWrong 5 Authors ($K=5$, $M=15$, 50 trials per
   $N$). The curve follows the 10-author trend up to $N=1500$, then
   \textbf{flattens}: ARI moves only from $0.44$ to $0.46$ over the range
@@ -496,7 +479,7 @@ and track two features as a function of passage length:
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\linewidth]{../outputs/kmeans/effect_of_n/feature_stability_zvi.png}
+  \includegraphics[width=0.75\linewidth]{../src/kmeans/outputs/effect_of_n/feature_stability_zvi.png}
   \caption{Two stylometric features computed on random windows of \code{zvi}'s
   concatenated text. The spread around each mean narrows as $N$ grows.}
   \label{fig:feat_stability}
@@ -519,20 +502,20 @@ hypothesised \textbf{lower K-means performance in the post-2024 era than in
 the pre-2022 era}.
 
 \paragraph{Setup.}
-LessWrong 10 Authors, $K=4$, $M=10$, $N=1{,}526$, 50 trials per era. Each
+LessWrong 10 Authors, $K=4$, $M=10$, $N=1{,}500$, 50 trials per era. Each
 trial samples 4 of the 10 authors and 10 of each author's 20 era-restricted
 articles; the rest of the pipeline is unchanged.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{../outputs/kmeans/effect_of_era/ari_vs_era.png}
-  \caption{ARI by era ($K=4$, $M=10$, $N=1526$, 50 trials per era). Mean ARI
-  drops from \textbf{0.68} in the pre-2022 era to \textbf{0.54} in the
+  \includegraphics[width=0.82\linewidth]{../src/kmeans/outputs/effect_of_era/ari_vs_era.png}
+  \caption{ARI by era ($K=4$, $M=10$, $N=1500$, 50 trials per era). Mean ARI
+  drops from \textbf{0.66} in the pre-2022 era to \textbf{0.53} in the
   post-2024 era.}
   \label{fig:era}
 \end{figure}
 
-The mean ARI drops from \textbf{0.68} (pre, $\leq 2022$) to \textbf{0.54}
+The mean ARI drops from \textbf{0.66} (pre, $\leq 2022$) to \textbf{0.53}
 (post, $\geq 2024$), a substantial gap that is consistent with our expectation.
 
 \paragraph{Does this prove people are using AI to polish their writing?}
