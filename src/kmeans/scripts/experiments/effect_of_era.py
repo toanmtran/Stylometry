@@ -1,25 +1,4 @@
-"""
-Effect of era on clustering quality (ARI vs publication period).
-
-Tests whether stylometric clustering generalises across publication eras
-on the cleaned_10 corpus, where every author has exactly 40 articles
-balanced 20|20 between pre (year <= 2022) and post (year >= 2024).
-
-Fixed parameters across both eras:
-  K = 4   (authors per trial, sampled from the 10 in cleaned_10)
-  M = 10  (docs per author, sampled from that author's 20 in this era)
-  N = 1500  (words per doc)
-
-For each era we run N_TRIALS = 50 independent trials. Each trial:
-  1. Randomly samples K authors from the 10 available.
-  2. Randomly samples M of that author's 20 era-restricted docs.
-  3. Runs K-means++ (n_init=10) and records ARI vs true author labels.
-
-Per-era RNG keying mirrors the other sweep scripts: each era gets its
-own seed branch so adding/removing an era leaves the other untouched.
-
-Output: src/kmeans/outputs/effect_of_era/ari_vs_era.png
-"""
+"""ARI vs publication era (pre <=2022 vs post >=2024) on cleaned_10."""
 
 from __future__ import annotations
 
@@ -53,14 +32,14 @@ from src.kmeans.scripts.clustering import build_feature_matrix
 from src.kmeans.scripts.corpus import load_corpus
 
 
-DOC_LENGTH = 1500        # fixed N for both eras
+DOC_LENGTH = 1500
 K = 4
 M = 10
 N_TRIALS = 50
 N_INIT = 10
 GLOBAL_SEED = 42
 
-ERAS = ["pre", "post"]   # x-axis order, left -> right
+ERAS = ["pre", "post"]
 ERA_LABELS = {"pre": "pre  (year ≤ 2022)", "post": "post  (year ≥ 2024)"}
 
 OUT_DIR = _KMEANS_DIR / "outputs" / "effect_of_era"
@@ -75,12 +54,7 @@ def _sample_groups(
     n_trials: int,
     seed: int,
 ) -> list[tuple[str, ...]]:
-    """Sample K-author groups for one era.
-
-    Without replacement when C(n_authors, K) >= n_trials; otherwise uses
-    every unique group once and fills the remainder with replacement.
-    Mirrors the helper used by effect_of_m / effect_of_k.
-    """
+    """Sample n_trials K-author groups, with replacement only when needed."""
     subsets = list(itertools.combinations(unique_authors, k))
     rng = random.Random(seed)
     if len(subsets) >= n_trials:
@@ -92,8 +66,7 @@ def _sample_groups(
 
 
 def run_era(corpus, era: str) -> list[float]:
-    """Filter to `era`, build the era-restricted feature matrix once,
-    then run N_TRIALS sampled (K, M) trials and return the ARI list."""
+    """Run N_TRIALS (K, M) trials restricted to one era and return the ARI list."""
     sub = corpus.filter(era=era).truncate_to(DOC_LENGTH)
     n_authors = len(set(sub.authors))
     print(f"  era={era}: {len(sub)} docs × {sub.truncated_to}w  "
@@ -161,8 +134,7 @@ def _print_summary(results: dict[str, list[float]]) -> None:
 
 
 def plot_ari_vs_era(results: dict[str, list[float]], out_path: Path) -> None:
-    """Two-position categorical version of the ARI sweep plot — same look
-    as plot_ari_sweep but with era labels on the x-axis."""
+    """Two-category ARI plot with era labels on the x-axis."""
     xs = list(range(len(ERAS)))
     means = [float(np.mean(results[e])) for e in ERAS]
     stds = [float(np.std(results[e])) for e in ERAS]

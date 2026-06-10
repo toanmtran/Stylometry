@@ -1,29 +1,4 @@
-"""
-Effect of M (docs per author) on clustering quality (ARI vs M).
-
-K is fixed at 4. Doc length is fixed at DOC_LENGTH = 1500 words for both
-datasets, so length is not a confound when comparing across M values or
-datasets.
-
-Two datasets are tested:
-
-  cleaned_10 — 10 authors, 40 docs/author available after filtering.
-    M in {5, 10, 15, 20, 25, 30}.
-    Each trial randomly samples K=4 authors from 10, then M docs per author.
-    Author-group sampling adds extra variance across trials.
-
-  sup_4 — 4 authors (= K), 76-79 docs/author available after filtering.
-    M in {5, 10, 15, 20, 25, 30, 40, 50, 60}.
-    C(4,4)=1 so every trial uses all 4 authors; only docs are randomly
-    sampled. Variance comes purely from doc selection + KMeans init.
-
-Each M uses its own independent RNG seeded by (GLOBAL_SEED, m). Adding
-or removing M values does not perturb the samples drawn for other M's.
-
-Outputs:
-  - src/kmeans/outputs/effect_of_m/ari_vs_m_10authors.png
-  - src/kmeans/outputs/effect_of_m/ari_vs_m_4authors.png
-"""
+"""ARI vs docs-per-author M, run on cleaned_10 and on sup_4."""
 
 from __future__ import annotations
 
@@ -57,14 +32,14 @@ from src.kmeans.scripts.corpus import load_corpus
 from src.kmeans.scripts.viz import plot_ari_sweep
 
 
-DOC_LENGTH = 1500  # fixed N for both datasets
+DOC_LENGTH = 1500
 K = 4
 N_TRIALS = 50
 N_INIT = 10
 GLOBAL_SEED = 42
 
-M_VALUES_10 = [5, 10, 15, 20]               # cleaned_10: 40 docs/author; M<N/2=20
-M_VALUES_4  = [5, 10, 15, 20, 25, 30, 40]  # sup_4:  76-79 docs/author; M<N/2=38
+M_VALUES_10 = [5, 10, 15, 20]
+M_VALUES_4  = [5, 10, 15, 20, 25, 30, 40]
 
 OUT_DIR = _KMEANS_DIR / "outputs" / "effect_of_m"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -79,11 +54,7 @@ def _sample_groups(
     n_trials: int,
     seed: int,
 ) -> list[tuple[str, ...]]:
-    """Sample K-author groups for one M value.
-
-    Without replacement when C(n_authors, K) ≥ n_trials; otherwise uses
-    every unique group once and fills the remainder with replacement.
-    """
+    """Sample n_trials K-author groups, with replacement only when needed."""
     subsets = list(itertools.combinations(unique_authors, k))
     rng = random.Random(seed)
     if len(subsets) >= n_trials:
@@ -104,7 +75,7 @@ def ari_sweep_m(
     n_init: int = 10,
     seed: int = 42,
 ) -> dict[int, list[float]]:
-    """For each M, run `n_trials` sampled trials and return per-M ARI lists."""
+    """For each M, run n_trials trials and return per-M ARI lists."""
     unique_authors = sorted(set(authors))
     author_to_rows: dict[str, list[int]] = {}
     for i, a in enumerate(authors):
