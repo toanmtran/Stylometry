@@ -61,9 +61,9 @@ Cleaned corpora are already shipped under [dataset/cleaned/](dataset/cleaned/)
 (`cleaned_5`, `cleaned_10`, `cleaned_35`). To **re-crawl** from LessWrong:
 
 ```bash
-python dataset/scripts/crawl_lesswrong5.py     # 5  primary authors
+python dataset/scripts/crawl_lesswrong5.py     # 5  authors
 python dataset/scripts/crawl_lesswrong10.py    # 10 authors
-python dataset/scripts/crawl_lesswrong35.py    # 35 authors (broader pool)
+python dataset/scripts/crawl_lesswrong35.py    # 35 authors
 
 python dataset/scripts/stats_raw.py            # corpus statistics on raw/
 python dataset/scripts/stats_clean.py          # corpus statistics on cleaned/
@@ -77,8 +77,7 @@ All commands are run from the **project root** (`Stylometry/`).
 
 ### 1. K-Means clustering
 
-The k-means pipeline (feature extraction → standardisation → KMeans → Hungarian
-assignment → ARI evaluation) is split into reusable modules under
+The k-means pipeline (feature extraction → KMeans → ARI evaluation) is split into reusable modules under
 [src/kmeans/scripts/](src/kmeans/scripts/) and experiment drivers under
 [experiments/](src/kmeans/scripts/experiments/).
 
@@ -150,19 +149,3 @@ python final_evaluation.py
 
 A walk-through notebook is also available at
 [src/svm&logisticregression/scripts/demo.ipynb](src/svm&logisticregression/scripts/demo.ipynb).
-
----
-
-## Reports
-
-Compiled PDFs live in [docs/](docs/):
-
-| File                              | Contents                                       |
-| --------------------------------- | ---------------------------------------------- |
-| `project_report.pdf`              | Unified report covering all three methods      |
-| `kmeans_report.pdf`               | K-Means clustering deep-dive                   |
-| `neural_network_report.pdf`       | MLP classifier deep-dive                       |
-| `crawl_data.pdf`                  | Dataset construction and crawling pipeline     |
-
-The matching LaTeX sources (`.tex`) are in the same folder and can be rebuilt
-with any standard TeX distribution (`pdflatex` / `latexmk`).
