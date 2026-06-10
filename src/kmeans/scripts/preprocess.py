@@ -1,19 +1,4 @@
-"""
-Dataset preprocessing helpers for the stylometry demos.
-
-Two concerns:
-
-1. Boilerplate. Aeon articles embed newsletter pitches, a donation footer,
-   and a `byAuthor+BIO … Edited by…` header that repeats across every
-   article from the same author — massive same-author text overlap that
-   inflates stylometric similarity for trivial reasons. We strip those
-   patterns. Guardian articles are substantially cleaner; we only
-   normalise whitespace.
-
-2. Length. Features like yule_k, honoré_r, hapax_ratio and absolute
-   vocabulary counts vary with document length. Truncating every doc to
-   the same first-M-words prefix removes that confound.
-"""
+"""Per-corpus boilerplate stripping, typography normalisation, and length truncation."""
 
 from __future__ import annotations
 
@@ -24,31 +9,19 @@ from pathlib import Path
 from typing import Callable
 
 
-# ── Typography canonicalisation ──────────────────────────────────────────────
-#
-# Different publishing pipelines emit different quote glyphs. Straight vs curly
-# apostrophes (' vs ’) and straight vs curly double quotes (" vs “ ”) are a
-# typography choice made by the CMS, not by the author — but downstream they
-# produce completely different tokens and char n-grams, so "don't" and "don’t"
-# look like different words. Without this normalisation, features like
-# `contraction_rate` and char n-grams such as "n't"/"n’t" end up fingerprinting
-# the publishing pipeline instead of measuring style.
-
 _TYPOGRAPHY_MAP = str.maketrans({
-    "‘": "'",  # LEFT SINGLE QUOTATION MARK
-    "’": "'",  # RIGHT SINGLE QUOTATION MARK (curly apostrophe)
-    "`": "'",  # GRAVE ACCENT — rarely used as apostrophe
-    "“": '"',  # LEFT DOUBLE QUOTATION MARK
-    "”": '"',  # RIGHT DOUBLE QUOTATION MARK
+    "‘": "'",
+    "’": "'",
+    "`": "'",
+    "“": '"',
+    "”": '"',
 })
 
 
 def canonicalize_typography(text: str) -> str:
-    """Map typographic quotes/apostrophes to their ASCII equivalents."""
+    """Map curly quotes and apostrophes to their ASCII equivalents."""
     return text.translate(_TYPOGRAPHY_MAP)
 
-
-# ── Word counting ────────────────────────────────────────────────────────────
 
 _WORD_RE = re.compile(r"\b\w+\b")
 
@@ -58,7 +31,7 @@ def word_count(text: str) -> int:
 
 
 def truncate_to_words(text: str, n: int) -> str:
-    """Return the prefix of `text` containing the first `n` word tokens."""
+    """Return the prefix of text containing the first n word tokens."""
     count = 0
     for m in _WORD_RE.finditer(text):
         count += 1
@@ -67,25 +40,14 @@ def truncate_to_words(text: str, n: int) -> str:
     return text
 
 
-# ── Aeon cleanup ─────────────────────────────────────────────────────────────
-
-# The footer always starts with this sentence (often duplicated). Anything
-# after it is donation/related-articles/copyright boilerplate.
 _AEON_FOOTER_START = re.compile(
     r"We publish hard-won knowledge from real people", re.IGNORECASE
 )
-
-# Inline newsletter pitch. Appears verbatim, often duplicated back-to-back.
 _AEON_NEWSLETTER = re.compile(
     r"Join more than [\d,]+\s*newsletter subscribers.*?unsubscribe anytime\.\s*",
     re.IGNORECASE | re.DOTALL,
 )
-
-# The `byAuthor Name+BIO` marker that introduces the bio paragraph.
-# Allow commas/ampersands for multi-author articles.
 _AEON_BYLINE_MARKER = re.compile(r"\bby[A-Z][\w'’\-.,& ]*?\+BIO\b\s*")
-
-# "Edited byEditor Name"
 _AEON_EDITED_BY = re.compile(
     r"\bEdited by[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b\s*"
 )
@@ -100,27 +62,14 @@ def strip_aeon_boilerplate(text: str) -> str:
 
 
 def extract_aeon_byline(text: str) -> str | None:
-    """Return the name(s) in the `byName+BIO` marker, or None."""
+    """Return the name(s) in the Aeon byName+BIO marker, or None."""
     m = re.match(r"\s*by([A-Z][\w'’\-., & ]*?)\+BIO", text)
     return m.group(1).strip() if m else None
-
-
-# ── Guardian cleanup ─────────────────────────────────────────────────────────
 
 
 def strip_guardian_boilerplate(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
-
-# ── LessWrong cleanup ────────────────────────────────────────────────────────
-#
-# LessWrong posts frequently embed fenced code, inline code, LaTeX math, URLs,
-# and bullet/numbered list markers. These break NLTK's sentence tokenizer
-# (which in turn makes avg_sent_len explode to 100+ words on ~3% of docs) and
-# inject topic-specific character sequences that leak into any char-n-gram
-# features. We strip all of them and collapse whitespace. Callers should use
-# `min_valid_words >= 1000` so posts that were mostly code/math get dropped
-# rather than pulling the truncation length down for everyone else.
 
 _LW_CODE_FENCE  = re.compile(r"```.*?```", re.DOTALL)
 _LW_INLINE_CODE = re.compile(r"`[^`\n]+`")
@@ -140,11 +89,8 @@ def strip_lesswrong_boilerplate(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-# ── Loading ──────────────────────────────────────────────────────────────────
-
-
 def _sanitize_json(raw: str) -> str:
-    """Escape stray control chars inside JSON strings; strip trailing commas."""
+    """Escape stray control chars inside JSON strings and strip trailing commas."""
     cleaned, in_string, escape_next = [], False, False
     for ch in raw:
         if escape_next:
@@ -170,8 +116,8 @@ def _sanitize_json(raw: str) -> str:
 class LoadedDoc:
     file_stem: str
     index: int
-    declared_author: str  # from JSON `author` field
-    text: str             # raw, before cleaning
+    declared_author: str
+    text: str
 
 
 def load_folder(folder: Path) -> list[LoadedDoc]:
@@ -190,17 +136,14 @@ def load_folder(folder: Path) -> list[LoadedDoc]:
     return out
 
 
-# ── Pipeline ─────────────────────────────────────────────────────────────────
-
-
 @dataclass
 class PreparedDataset:
-    docs: list[str]            # cleaned + truncated text
+    docs: list[str]
     labels: list[str]
-    authors: list[str]         # declared author (lowercase)
-    min_words: int             # M used for truncation
-    dropped: list[tuple[str, str, int]]  # (label, reason, word_count)
-    byline_mismatches: list[tuple[str, str, str]]  # (label, declared, actual)
+    authors: list[str]
+    min_words: int
+    dropped: list[tuple[str, str, int]]
+    byline_mismatches: list[tuple[str, str, str]]
 
 
 def prepare(
@@ -213,29 +156,11 @@ def prepare(
     label_prefix_len: int = 12,
     stem_transform: Callable[[str], str] | None = None,
 ) -> PreparedDataset:
-    """
-    Load, clean, filter, and truncate a dataset folder.
-
-    Steps:
-      1. Load every per-author JSON file.
-      2. Clean each text with `cleaner` (removes dataset boilerplate).
-      3. Drop docs shorter than `min_valid_words` after cleaning (error
-         pages, scraping stubs).
-      4. If `min_sentence_density` is set, drop docs whose ratio of
-         sentence-ending punctuation (. ! ?) to word count falls below
-         it. Catches pasted transcripts or run-on content that isn't
-         really prose. Value is sentences-per-word; 1/50 = 0.02 means
-         "at least one end-punctuation per 50 words" (normal prose runs
-         ~1 per 15-25 words).
-      5. Drop exact-duplicate texts that appeared more than once in the
-         dataset (same scraped article re-indexed).
-      6. M := min word count across surviving docs. Truncate all to M.
-      7. Collect byline-vs-declared-author mismatches for reporting.
-    """
+    """Load, clean, filter, and equal-length-truncate every doc in a folder."""
     raw = load_folder(folder)
     cleaned: list[tuple[LoadedDoc, str, int]] = []
     dropped: list[tuple[str, str, int]] = []
-    seen_texts: dict[str, str] = {}  # normalized text -> first label to keep
+    seen_texts: dict[str, str] = {}
 
     for d in raw:
         label = f"{d.file_stem[:label_prefix_len]}_{d.index:02d}"
@@ -263,7 +188,6 @@ def prepare(
                 )
                 continue
 
-        # Drop exact duplicates (keep first occurrence).
         key = cleaned_text
         if key in seen_texts:
             dropped.append((label, f"duplicate-of:{seen_texts[key]}", wc))

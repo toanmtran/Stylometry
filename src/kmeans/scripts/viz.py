@@ -1,4 +1,4 @@
-"""Shared plotting helpers for clustering problems."""
+"""Plotting helpers for the K-means experiments."""
 
 from __future__ import annotations
 
@@ -13,12 +13,11 @@ from matplotlib.patches import FancyBboxPatch
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
 
-from src.kmeans.scripts.clustering import f_ratio, hungarian_map
+from src.kmeans.scripts.clustering import hungarian_map
 
 
 def _cluster_majority(pred: np.ndarray, true_ids: list[int]) -> dict[int, int]:
-    """For each predicted cluster id, return the true-author id that is the
-    majority inside that cluster (ties broken by smallest author id)."""
+    """Map each predicted cluster id to its majority true-author id."""
     out: dict[int, int] = {}
     for c in set(int(p) for p in pred):
         members = [true_ids[i] for i in range(len(pred)) if pred[i] == c]
@@ -26,34 +25,19 @@ def _cluster_majority(pred: np.ndarray, true_ids: list[int]) -> dict[int, int]:
     return out
 
 
-def _pretty_feature_name(name: str) -> str:
-    if name.startswith("fw_"):
-        return f"FW:{name[3:]}"
-    if name.startswith("punct_"):
-        return f"P:{name[6:]}"
-    if name.startswith("cat_"):
-        return f"CAT:{name[4:]}"
-    if name.startswith("pos_"):
-        return f"POS:{name[4:]}"
-    return name
-
-
 def plot_diagnostics(
     X: np.ndarray,
     pred: np.ndarray,
     true_ids: list[int],
     author_names: list[str],
-    feature_names: list[str],
     ari: float,
     out_path: Path,
     *,
     title_prefix: str = "Stylometric Clustering",
     subtitle: str | None = None,
-    top_k_features: int = 20,
     settings_lines: list[str] | None = None,
 ) -> None:
-    """4-panel diagnostic: PCA (true + predicted), settings/top features,
-    and Hungarian-aligned confusion matrix."""
+    """4-panel diagnostic: PCA by true author and by cluster, settings, confusion."""
     fig, axes = plt.subplots(2, 2, figsize=(20, 15))
     head = f"{title_prefix}\nARI = {ari:.3f}"
     if subtitle:
@@ -64,7 +48,6 @@ def plot_diagnostics(
     X2 = pca.transform(X)
     colors = cm.tab20(np.linspace(0, 1, 20))
 
-    # 1. PCA coloured by true author
     ax = axes[0, 0]
     for i, name in enumerate(author_names):
         mask = np.array(true_ids) == i
@@ -78,11 +61,6 @@ def plot_diagnostics(
     ax.tick_params(axis="both", labelsize=15)
     ax.grid(True, alpha=0.25)
 
-    # 2. PCA coloured by predicted cluster (each cluster -> majority-author colour).
-    # Multiple clusters can share a colour when an author's docs split across
-    # clusters; some author colours may not appear at all if no cluster has
-    # that author as its majority. This reflects where the clusters actually
-    # went rather than forcing a 1-to-1 mapping.
     cluster_major = _cluster_majority(pred, true_ids)
     doc_color_id = np.array([cluster_major[int(p)] for p in pred])
     ax = axes[0, 1]
@@ -99,11 +77,9 @@ def plot_diagnostics(
     ax.tick_params(axis="both", labelsize=15)
     ax.grid(True, alpha=0.25)
 
-    # 3. Settings panel OR top-N discriminating features.
     ax = axes[1, 0]
+    ax.axis("off")
     if settings_lines:
-        ax.axis("off")
-        # Calculate dimensions based on number of lines
         n_lines = len(settings_lines)
         box_height = min(0.9, 0.13 * n_lines + 0.05)
         box_y = 0.5 - box_height / 2
@@ -116,7 +92,6 @@ def plot_diagnostics(
         )
         ax.add_patch(panel)
 
-        # Center text vertically based on number of lines
         dy = min(0.12, (box_height - 0.1) / max(n_lines - 1, 1)) if n_lines > 1 else 0
         y = 0.5 + (dy * (n_lines - 1) / 2)
 
@@ -145,23 +120,7 @@ def plot_diagnostics(
                     fontsize=26, fontweight="bold",
                 )
             y -= dy
-    else:
-        f = f_ratio(X, pred)
-        top = np.argsort(f)[::-1][:top_k_features]
-        labels_top = [_pretty_feature_name(feature_names[i]) for i in top]
-        y_pos = np.arange(len(top))
-        ax.barh(y_pos, f[top], color="#4C72B0", alpha=0.85,
-                edgecolor="black", linewidth=0.4)
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(labels_top, fontsize=13)
-        ax.invert_yaxis()  # largest F at the top
-        ax.set_title(f"Top {top_k_features} discriminating features "
-                     , fontsize=18)
-        ax.set_xlabel("F-ratio (between / within cluster variance)", fontsize=16)
-        ax.tick_params(axis="x", labelsize=14)
-        ax.grid(True, axis="x", alpha=0.25)
 
-    # 4. Confusion matrix (Hungarian 1-to-1 mapping; kept for completeness).
     mapped = hungarian_map(true_ids, pred)
     ax = axes[1, 1]
     cm_ = confusion_matrix(true_ids, mapped, labels=list(range(len(author_names))))
@@ -182,37 +141,6 @@ def plot_diagnostics(
     plt.close(fig)
 
 
-def plot_top_features(
-    X: np.ndarray,
-    pred: np.ndarray,
-    feature_names: list[str],
-    out_path: Path,
-    *,
-    top_k_features: int = 20,
-    title: str = "Top Discriminating Features",
-) -> None:
-    """Standalone Top-N discriminating feature chart."""
-    f = f_ratio(X, pred)
-    top = np.argsort(f)[::-1][:top_k_features]
-    labels_top = [_pretty_feature_name(feature_names[i]) for i in top]
-
-    fig, ax = plt.subplots(figsize=(14, 10))
-    y_pos = np.arange(len(top))
-    ax.barh(y_pos, f[top], color="#4C72B0", alpha=0.85,
-            edgecolor="black", linewidth=0.4)
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels_top, fontsize=17)
-    ax.invert_yaxis()
-    ax.set_title(title, fontsize=24)
-    ax.set_xlabel("F-ratio (between / within cluster variance)", fontsize=18)
-    ax.tick_params(axis="x", labelsize=16)
-    ax.grid(True, axis="x", alpha=0.25)
-
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=220, bbox_inches="tight")
-    plt.close(fig)
-
-
 def plot_ari_sweep(
     results: dict[int, list[float]],
     out_path: Path,
@@ -222,20 +150,13 @@ def plot_ari_sweep(
     x_symbol: str = "K",
     xscale: str = "linear",
 ) -> None:
-    """Mean ± std ARI across x values, with individual trial dots overlaid.
-    The subtitle shows the trial count at each x explicitly (since different
-    x values may run different numbers of trials).
-
-    `x_symbol` is the short name used in the per-x trial-count subtitle
-    (e.g. "K" or "N"). `xscale` is passed to matplotlib."""
+    """Plot mean ± std ARI across x values, with individual trial dots overlaid."""
     xs_sorted = sorted(results)
     means = [float(np.mean(results[x])) for x in xs_sorted]
     stds = [float(np.std(results[x])) for x in xs_sorted]
 
     fig, ax = plt.subplots(figsize=(8.5, 5.5))
     jitter_rng = np.random.RandomState(0)
-    # Jitter is proportional to the local spacing so it reads correctly on
-    # both linear and log axes with unevenly spaced x values.
     for i, x in enumerate(xs_sorted):
         if len(xs_sorted) > 1:
             left = xs_sorted[i - 1] if i > 0 else x

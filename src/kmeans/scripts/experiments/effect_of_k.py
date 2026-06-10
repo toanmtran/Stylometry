@@ -1,30 +1,4 @@
-"""
-Effect of K on clustering quality (ARI vs K), holding per-cluster data
-density constant.
-
-We fix M_PER_AUTHOR docs/author at every K (so total docs grows with K)
-and run N_TRIALS controlled trials per K in {2, 4, 6, 8, 10, 12, 14, 16}:
-
-  1) Sample a K-author group (without replacement when enough unique
-     groups exist; with replacement only when C(n_authors, K) < N_TRIALS).
-  2) Sample M_PER_AUTHOR docs from each chosen author.
-  3) Cluster with K-means++ (n_init=10) and record ARI against true labels.
-
-Holding docs/author constant isolates the K effect from data sparsity:
-a downward trend here is evidence that, for this specific author pool,
-increasing the number of clusters itself degrades performance, independent
-of how much data each cluster sees.
-
-Dataset: LessWrong 35 Authors (lesswrong_large/cleaned_35) — 35 authors,
-each with at least 27 articles of length ≥ 1500 words.
-The large author pool means every K in the sweep always has far more unique
-K-author groups than N_TRIALS, so all 100 trials per K draw distinct groups.
-
-Each K uses its own independent RNG seeded by (GLOBAL_SEED, k). Adding
-or removing K values does not perturb the samples drawn for other K's.
-
-Output: src/kmeans/outputs/effect_of_k/ari_vs_k.png
-"""
+"""ARI vs number of clusters K on cleaned_35, with docs/author held constant."""
 
 from __future__ import annotations
 
@@ -63,7 +37,7 @@ DOC_LENGTH = 1500
 K_VALUES = [2, 4, 6, 8, 10, 12]
 N_TRIALS = 100
 N_INIT = 10
-M_PER_AUTHOR = 15  # fixed docs/author at every K
+M_PER_AUTHOR = 15
 GLOBAL_SEED = 42
 
 OUT_DIR = _KMEANS_DIR / "outputs" / "effect_of_k"
@@ -71,7 +45,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 FIG_PATH = OUT_DIR / "ari_vs_k.png"
 
 
-_ENUM_THRESHOLD = 2_000_000  # max pool size to enumerate in memory
+_ENUM_THRESHOLD = 2_000_000
 
 
 def _sample_groups(
@@ -81,12 +55,7 @@ def _sample_groups(
     n_trials: int,
     seed: int,
 ) -> list[tuple[str, ...]]:
-    """Sample K-author groups for one K value.
-
-    For small pools (≤ _ENUM_THRESHOLD): enumerate all combinations and
-    sample/fill from them. For large pools: draw groups directly via
-    random.sample to avoid materialising billions of tuples.
-    """
+    """Sample n_trials K-author groups (enumerate when feasible, else direct sampling)."""
     n = len(unique_authors)
     if n < k:
         return []
@@ -105,7 +74,6 @@ def _sample_groups(
         subsets = list(itertools.combinations(unique_authors, k))
         return rng.sample(subsets, n_trials)
 
-    # Large pool: sample directly; collision probability ≈ n_trials²/(2·pool_size) ≈ 0
     seen: set[tuple[str, ...]] = set()
     groups: list[tuple[str, ...]] = []
     while len(groups) < n_trials:
@@ -126,9 +94,7 @@ def ari_sweep(
     docs_per_author: int,
     seed: int = 42,
 ) -> dict[int, list[float]]:
-    """For each K, run `n_trials` sampled author-group trials and return
-    per-K ARI lists. Each trial draws `docs_per_author` docs from each
-    chosen author (without replacement)."""
+    """For each K, run n_trials author-group trials and return per-K ARI lists."""
     unique_authors = sorted(set(authors))
     author_to_rows: dict[str, list[int]] = {}
     for i, a in enumerate(authors):

@@ -1,17 +1,4 @@
-"""
-Stylometric feature extraction.
-
-Produces 100+ handcrafted features per document covering:
-  - word/sentence length statistics
-  - vocabulary richness (Yule K, Simpson D, Brunét W, Honoré R, hapax ratios)
-  - function-word frequencies (top-50 English)
-  - stylistic word categories (hedges, amplifiers, discourse markers, conjunctions)
-  - punctuation rates
-  - POS-tag distribution (coarse groups)
-  - character-level ratios (uppercase, vowels)
-
-Tokenization and POS-tagging use NLTK.
-"""
+"""Handcrafted stylometric feature extraction (length, lexical richness, POS, punctuation)."""
 
 from __future__ import annotations
 
@@ -36,8 +23,6 @@ from nltk import pos_tag
 
 warnings.filterwarnings("ignore")
 
-
-# ── Lexical resources ────────────────────────────────────────────────────────
 
 FUNCTION_WORDS = [
     "the", "be", "to", "of", "and", "a", "in", "that", "have", "i",
@@ -66,16 +51,12 @@ CONJUNCTIONS = [
 ]
 
 
-# ── Tokenization helpers ─────────────────────────────────────────────────────
-
 def _tokenize(text: str):
     sentences = sent_tokenize(text)
     tokens_raw = word_tokenize(text)
     tokens_alpha = [t.lower() for t in tokens_raw if t.isalpha()]
     return sentences, tokens_raw, tokens_alpha
 
-
-# ── Vocabulary-richness helpers ──────────────────────────────────────────────
 
 def _yule_k(tokens):
     freq = Counter(tokens)
@@ -130,10 +111,8 @@ def _pos_tag_distribution(tokens_alpha):
     return {tag: count / total for tag, count in tag_counts.items()}
 
 
-# ── Main entry points ────────────────────────────────────────────────────────
-
 def extract_features(text: str) -> Dict[str, float]:
-    """Extract 100+ stylometric features from a single document."""
+    """Extract the full stylometric feature dictionary for a single document."""
     sentences, tokens_raw, tokens = _tokenize(text)
     n_sent = len(sentences) or 1
     n_tok = len(tokens) or 1
@@ -143,13 +122,11 @@ def extract_features(text: str) -> Dict[str, float]:
 
     f: Dict[str, float] = {}
 
-    # Basic stats
     f["n_tokens"] = n_tok
     f["n_sentences"] = n_sent
     f["n_vocab"] = n_vocab
     f["type_token_ratio"] = n_vocab / n_tok
 
-    # Word length
     wlens = [len(w) for w in tokens]
     f["avg_word_len"] = np.mean(wlens)
     f["std_word_len"] = np.std(wlens)
@@ -158,7 +135,6 @@ def extract_features(text: str) -> Dict[str, float]:
     for k_len in [1, 2, 3, 4, 5, 6]:
         f[f"word_len_{k_len}_frac"] = sum(1 for l in wlens if l == k_len) / n_tok
 
-    # Sentence length
     slens = [len(word_tokenize(s)) for s in sentences]
     f["avg_sent_len"] = np.mean(slens)
     f["std_sent_len"] = np.std(slens)
@@ -166,7 +142,6 @@ def extract_features(text: str) -> Dict[str, float]:
     f["max_sent_len"] = max(slens) if slens else 0
     f["min_sent_len"] = min(slens) if slens else 0
 
-    # Vocabulary richness
     f["hapax_ratio"] = _hapax_ratio(tokens)
     f["hapax_dis_ratio"] = _hapax_dis_ratio(tokens)
     f["yule_k"] = _yule_k(tokens)
@@ -174,11 +149,9 @@ def extract_features(text: str) -> Dict[str, float]:
     f["brunet_w"] = _brunet_w(tokens)
     f["honore_r"] = _honore_r(tokens)
 
-    # Function words
     for fw in FUNCTION_WORDS:
         f[f"fw_{fw}"] = freq.get(fw, 0) / n_tok
 
-    # Stylistic word categories
     for name, wordlist in [
         ("hedge", HEDGE_WORDS),
         ("amplifier", AMPLIFIERS),
@@ -187,7 +160,6 @@ def extract_features(text: str) -> Dict[str, float]:
     ]:
         f[f"cat_{name}_rate"] = sum(freq.get(w, 0) for w in wordlist) / n_tok
 
-    # Punctuation
     punct_counts = Counter(c for c in text if c in string.punctuation)
     for p, label in [
         (",", "comma"), (".", "period"), (";", "semicolon"),
@@ -197,27 +169,20 @@ def extract_features(text: str) -> Dict[str, float]:
     ]:
         f[f"punct_{label}_rate"] = punct_counts.get(p, 0) / n_tok
 
-    # Contractions — match straight ('), curly (’), and backtick (`) apostrophes.
-    # The curly form is what most publishing pipelines emit, and without it the
-    # rate collapses to 0 for authors whose text has been through a smart-quotes
-    # editor — turning this into a typography signal rather than a linguistic one.
     contraction_pat = re.compile(
         r"\b\w+n['’`]t\b|\b\w+['’`](s|re|ve|ll|d|m)\b", re.I,
     )
     f["contraction_rate"] = len(contraction_pat.findall(text)) / n_tok
 
-    # Sentence starters
     starters = [word_tokenize(s)[0].lower() for s in sentences if word_tokenize(s)]
     starter_freq = Counter(starters)
     f["pronoun_start_rate"] = sum(
         starter_freq.get(p, 0) for p in ["i", "you", "he", "she", "it", "we", "they"]
     ) / n_sent
 
-    # Paragraph length
     n_para = max(1, len([p for p in text.split("\n\n") if p.strip()]))
     f["avg_paragraph_len"] = n_tok / n_para
 
-    # POS tags
     pos_dist = _pos_tag_distribution(tokens)
     pos_groups = {
         "pos_noun": ["NN", "NNS", "NNP", "NNPS"],
@@ -233,7 +198,6 @@ def extract_features(text: str) -> Dict[str, float]:
     for group_name, tags in pos_groups.items():
         f[group_name] = sum(pos_dist.get(t, 0) for t in tags)
 
-    # Character level
     alpha_chars = [c.lower() for c in text if c.isalpha()]
     n_alpha = len(alpha_chars) or 1
     f["uppercase_ratio"] = sum(1 for c in text if c.isupper()) / (len(text) or 1)
@@ -244,7 +208,7 @@ def extract_features(text: str) -> Dict[str, float]:
 
 
 def extract_features_batch(docs, labels=None) -> pd.DataFrame:
-    """Extract features for a list of documents; return a DataFrame indexed by label."""
+    """Extract features for many documents and return a label-indexed DataFrame."""
     if labels is None:
         labels = [f"Doc_{i + 1}" for i in range(len(docs))]
     records = []

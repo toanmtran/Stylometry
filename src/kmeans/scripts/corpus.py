@@ -1,16 +1,4 @@
-"""
-Load a cleaned corpus from `<dataset_root>/<source>/<cleaned_dir>/*.json`.
-
-Callers must pass `dataset_root` explicitly — there is no implicit
-project-relative default. `source` may be `""` for layouts where
-cleaned subsets sit directly under `dataset_root` (e.g. the kmeans
-experiments read from `src/kmeans/data/<cleaned_dir>/`).
-
-Standard object: `Corpus` — parallel lists of texts, labels, authors,
-eras, dates, word_counts. Supports filtering (by era, min_words, author
-subset) and equal-length truncation. Each problem script composes these
-to build its own view of the data without reaching back into raw files.
-"""
+"""Per-author JSON corpus loader and filtering helpers."""
 
 from __future__ import annotations
 
@@ -24,28 +12,22 @@ _WORD_RE = re.compile(r"\b\w+\b")
 
 @dataclass
 class Corpus:
-    """A parallel-list corpus representation.
-
-    All list-valued fields have length N (= number of docs) and share
-    ordering — element i in every list refers to the same document.
-    """
+    """Parallel-list corpus: one entry per document across all list fields."""
     texts: list[str]
     labels: list[str]
     authors: list[str]
-    eras: list[str | None]         # "pre" | "post" | None
+    eras: list[str | None]
     dates: list[str | None]
     word_counts: list[int]
-    source: str = ""               # e.g. "lesswrong_regular"
-    cleaned_dir: str = ""          # e.g. "cleaned_10" — the on-disk subfolder
-    truncated_to: int | None = None  # if equal_length_truncate has been applied
+    source: str = ""
+    cleaned_dir: str = ""
+    truncated_to: int | None = None
 
     def __len__(self) -> int:
         return len(self.texts)
 
-    # ── Indexing / row selection ─────────────────────────────────────────
-
     def select(self, indices: list[int]) -> "Corpus":
-        """Return a new Corpus with only the rows at `indices`."""
+        """Return a new Corpus restricted to the given row indices."""
         return Corpus(
             texts=[self.texts[i] for i in indices],
             labels=[self.labels[i] for i in indices],
@@ -57,8 +39,6 @@ class Corpus:
             cleaned_dir=self.cleaned_dir,
             truncated_to=self.truncated_to,
         )
-
-    # ── Filtering ────────────────────────────────────────────────────────
 
     def filter(
         self,
@@ -80,15 +60,10 @@ class Corpus:
             keep.append(i)
         return self.select(keep)
 
-    # ── Balanced sampling ────────────────────────────────────────────────
-
     def balance_per_author_era(
         self, *, n_per_era: int, seed: int = 0,
     ) -> "Corpus":
-        """Return a new Corpus with exactly `n_per_era` pre and `n_per_era`
-        post docs per author, drawn via a seeded random sample. Raises if
-        any author has fewer than `n_per_era` docs in either era. Docs with
-        era=None (neither pre nor post) are dropped."""
+        """Sample exactly n_per_era pre and n_per_era post docs per author."""
         import random
         rng = random.Random(seed)
 
@@ -110,33 +85,8 @@ class Corpus:
         keep.sort()
         return self.select(keep)
 
-    # ── Length control ───────────────────────────────────────────────────
-
-    def equal_length_truncate(self, *, floor: int | None = None) -> "Corpus":
-        """Truncate every text to M = min(word_count). If `floor` is given,
-        M = max(floor, min(word_count)) — use this to *require* a minimum
-        length after you've pre-filtered."""
-        if len(self) == 0:
-            return self
-        M = min(self.word_counts)
-        if floor is not None and M < floor:
-            raise ValueError(
-                f"equal_length_truncate: floor={floor} but shortest doc has "
-                f"only {M} words. Filter by min_words first."
-            )
-        new_texts = [_truncate_to_words(t, M) for t in self.texts]
-        new_wcs = [_word_count(t) for t in new_texts]
-        return replace(
-            self,
-            texts=new_texts,
-            word_counts=new_wcs,
-            truncated_to=M,
-        )
-
     def truncate_to(self, n: int) -> "Corpus":
-        """Truncate every text to exactly `n` words (first n). Raises if any
-        doc is shorter than n — pre-filter with `min_words=n` to guarantee
-        coverage. Used for controlled length sweeps (effect-of-N experiments)."""
+        """Truncate every text to exactly n words."""
         if n <= 0:
             raise ValueError(f"truncate_to: n must be positive, got {n}")
         if len(self) == 0:
@@ -157,33 +107,20 @@ class Corpus:
         )
 
 
-# ── Loader ───────────────────────────────────────────────────────────────────
-
-
 def load_corpus(
     source: str,
     *,
     cleaned_dir: str,
     dataset_root: Path,
 ) -> Corpus:
-    """Read every cleaned per-author JSON under `<dataset_root>/<source>/<cleaned_dir>/`.
-
-    All three arguments are required. Pass `source=""` when cleaned
-    subsets sit directly under `dataset_root` with no source layer.
-
-    Each file is a list of dicts with keys: author, text, word_count,
-    date, year, time_group, ...
-
-    The returned Corpus is sorted by (author, date, source_index) for
-    reproducibility.
-    """
+    """Load all per-author JSON files under dataset_root/source/cleaned_dir/."""
     folder = dataset_root / source / cleaned_dir
     if not folder.exists():
         raise FileNotFoundError(f"{folder} does not exist.")
 
     records: list[dict] = []
     for fp in sorted(folder.glob("*.json")):
-        if fp.name.startswith("_"):  # skip _dropped.jsonl and friends
+        if fp.name.startswith("_"):
             continue
         for item in json.loads(fp.read_text(encoding="utf-8")):
             records.append(item)
@@ -206,11 +143,7 @@ def load_corpus(
     )
 
 
-# ── helpers ─────────────────────────────────────────────────────────────────
-
-
 def _label_for(record: dict) -> str:
-    """Short stable label: <author>_<YYYY>_<index> (readable in plots)."""
     author = record.get("author", "unknown")
     year = record.get("year") or "xxxx"
     idx = record.get("source_index", 0)

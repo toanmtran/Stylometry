@@ -1,42 +1,4 @@
-"""
-Effect of N on clustering quality (ARI vs document length).
-Two experiments with K=5, M=15 fixed throughout.
-
-  cleaned_10: 10 authors × 40 articles each (≥1500 words).
-              N in {100, 200, 500, 1000, 1500}.
-              Each trial randomly samples K=5 authors from 10, then M=15
-              articles per selected author.
-
-  sup_5:      5 authors × 29–62 articles each (≥3000 words).
-              N in {100, 200, 500, 1000, 1500, 2000, 2500, 3000}.
-              K=5 equals the full author set, so each trial only samples
-              M=15 articles per author (no author selection).
-
-Conceptual illustration — why does ARI drop at short N?
-
-  As N shrinks, each document is too small a sample of its author's style —
-  feature frequencies become noisy estimates of the author's true rate, so
-  documents from different authors overlap in feature space and K-means
-  struggles to separate them.
-
-  We illustrate this with one author (zvi) and two features (fw_you,
-  word_len_1_frac):
-
-    1. Concatenate all of zvi's articles in `sup_5` into one long text.
-    2. For each window size N in CONCEPT_N_VALUES, sample CONCEPT_N_WINDOWS
-       random windows of exactly N whitespace-separated tokens.
-    3. Compute the two features on each window, record mean and std.
-    4. Plot feature value (mean ± std) vs N — one panel per feature.
-
-  Expected shape: the mean converges to zvi's long-run rate while the std
-  shrinks roughly like 1/sqrt(N). Short windows = high variance = authors
-  bleed into each other's feature distributions.
-
-Outputs:
-  src/kmeans/outputs/effect_of_n/ari_vs_n_10authors.png
-  src/kmeans/outputs/effect_of_n/ari_vs_n_5authors.png
-  src/kmeans/outputs/effect_of_n/feature_stability_zvi.png
-"""
+"""ARI vs article length N on cleaned_10 and sup_5, plus a single-author feature-stability plot."""
 
 from __future__ import annotations
 
@@ -71,7 +33,6 @@ from src.kmeans.scripts.preprocess import canonicalize_typography
 from src.kmeans.scripts.viz import plot_ari_sweep
 
 
-# ── Sweep experiment constants ────────────────────────────────────────────────
 K = 5
 M = 15
 N_TRIALS = 50
@@ -81,13 +42,11 @@ GLOBAL_SEED = 42
 N_VALUES_10 = [100, 200, 500, 1000, 1500]
 N_VALUES_5 = [100, 200, 500, 1000, 1500, 2000, 2500, 3000]
 
-# ── Concept illustration constants ────────────────────────────────────────────
 CONCEPT_AUTHOR = "zvi"
 CONCEPT_FEATURES = ["fw_you", "word_len_1_frac"]
 CONCEPT_N_VALUES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000]
 CONCEPT_N_WINDOWS = 20
 
-# ── Output paths ──────────────────────────────────────────────────────────────
 OUT_DIR = _KMEANS_DIR / "outputs" / "effect_of_n"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 FIG_PATH_10 = OUT_DIR / "ari_vs_n_10authors.png"
@@ -112,16 +71,7 @@ def run_ari_sweep(
     sample_authors: bool,
     seed: int,
 ) -> dict[int, list[float]]:
-    """Sweep N values, returning per-N ARI lists.
-
-    For each N:
-      1. Truncate all texts to N words, build the full feature matrix once.
-      2. For n_trials trials:
-         - If sample_authors: randomly pick k unique authors.
-         - Else: use all authors (requires exactly k authors in corpus).
-         - Randomly pick m docs per selected author.
-         - Run K-means++ on that subset, record ARI.
-    """
+    """For each N, run n_trials sampled trials and return per-N ARI lists."""
     unique_authors = sorted(set(corpus.authors))
     if not sample_authors and len(unique_authors) != k:
         raise ValueError(
@@ -180,8 +130,7 @@ def _print_summary(results: dict[int, list[float]], n_values: list[int]) -> None
 
 def sample_windows(tokens: list[str], n: int, n_windows: int,
                    rng: random.Random) -> list[str]:
-    """Draw `n_windows` random contiguous slices of exactly `n` tokens from
-    `tokens`, joined back into whitespace-separated strings."""
+    """Draw n_windows random contiguous n-token slices, joined back into strings."""
     max_start = len(tokens) - n
     if max_start < 0:
         raise ValueError(
@@ -294,8 +243,6 @@ def run_concept() -> None:
         sys.exit(1)
     print(f"  {len(docs)} articles for {CONCEPT_AUTHOR}")
 
-    # Canonicalise typography before sampling so feature rates don't depend
-    # on whether zvi's publisher converts ' → '.
     concat = canonicalize_typography(" ".join(docs))
     tokens = concat.split()
     print(f"  concatenated text: {len(tokens):,} whitespace-separated tokens")

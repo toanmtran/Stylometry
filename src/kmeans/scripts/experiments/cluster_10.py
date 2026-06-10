@@ -1,23 +1,10 @@
-"""
-Full K=10 clustering diagnostic on the LessWrong corpus.
-
-Loads the cleaned corpus, filters to ≥1500 words, truncates every doc to
-exactly N=1500 words, builds the stylometric feature matrix, runs K-means
-(k-means++ init, n_init=10), saves:
-  - main PCA + confusion diagnostic (with settings panel)
-  - standalone top-features chart
-
-Outputs:
-  - src/kmeans/outputs/cluster_10/clustering.png
-  - src/kmeans/outputs/cluster_10/top_features.png
-"""
+"""K=10 clustering on cleaned_10: main PCA/confusion diagnostic plus a seed-stability sweep."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-# Bootstrap: project root on sys.path so `from src.* import …` works.
 _EXPERIMENT_DIR = Path(__file__).resolve().parent
 _KMEANS_DIR = _EXPERIMENT_DIR.parents[1]
 _PROJECT_ROOT = _KMEANS_DIR.parents[1]
@@ -40,7 +27,7 @@ from sklearn.metrics import adjusted_rand_score
 
 from src.kmeans.scripts.clustering import build_feature_matrix
 from src.kmeans.scripts.corpus import load_corpus
-from src.kmeans.scripts.viz import plot_diagnostics, plot_top_features
+from src.kmeans.scripts.viz import plot_diagnostics
 
 
 MIN_WORDS = 1500
@@ -52,7 +39,6 @@ SAMPLE_SEED = 42
 OUT_DIR = _KMEANS_DIR / "outputs" / "cluster_10"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 FIG_PATH = OUT_DIR / "clustering.png"
-TOP_FEATURES_PATH = OUT_DIR / "top_features.png"
 STABILITY_PATH = OUT_DIR / "ari_vs_seed.png"
 
 
@@ -105,21 +91,12 @@ def main() -> None:
     plot_diagnostics(
         X=X, pred=pred,
         true_ids=true_ids, author_names=unique_authors,
-        feature_names=feature_names,
         ari=ari, out_path=FIG_PATH,
         title_prefix="K-means Clustering — LessWrong 10 Authors",
         settings_lines=settings_lines,
     )
 
-    plot_top_features(
-        X=X, pred=pred, feature_names=feature_names,
-        out_path=TOP_FEATURES_PATH,
-        top_k_features=20,
-        title="Top 20 Discriminating Features",
-    )
-
     print(f"\nSaved -> {FIG_PATH.relative_to(_PROJECT_ROOT)}")
-    print(f"Saved -> {TOP_FEATURES_PATH.relative_to(_PROJECT_ROOT)}")
 
     print(
         f"\nRunning stability analysis: 10 K-means runs "
@@ -131,10 +108,6 @@ def main() -> None:
     best_aris = []
 
     for i, test_seed in enumerate(test_seeds):
-        # Same X, same true_ids as the original run — only the K-means master
-        # seed changes. The shared RandomState across N_INIT KMeans(n_init=1)
-        # calls reproduces what KMeans(n_init=N_INIT, random_state=test_seed)
-        # does internally, so the star is the run sklearn would return.
         shared_rs = np.random.RandomState(test_seed)
         distortions = []
         aris = []
