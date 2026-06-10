@@ -1,4 +1,4 @@
-"""ARI vs number of clusters K on cleaned_35, with docs/author held constant."""
+"""ARI vs number of clusters K on cleaned_35, with articles/author held constant."""
 
 from __future__ import annotations
 

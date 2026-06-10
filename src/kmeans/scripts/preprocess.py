@@ -40,37 +40,6 @@ def truncate_to_words(text: str, n: int) -> str:
     return text
 
 
-_AEON_FOOTER_START = re.compile(
-    r"We publish hard-won knowledge from real people", re.IGNORECASE
-)
-_AEON_NEWSLETTER = re.compile(
-    r"Join more than [\d,]+\s*newsletter subscribers.*?unsubscribe anytime\.\s*",
-    re.IGNORECASE | re.DOTALL,
-)
-_AEON_BYLINE_MARKER = re.compile(r"\bby[A-Z][\w'’\-.,& ]*?\+BIO\b\s*")
-_AEON_EDITED_BY = re.compile(
-    r"\bEdited by[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b\s*"
-)
-
-
-def strip_aeon_boilerplate(text: str) -> str:
-    text = _AEON_FOOTER_START.split(text, maxsplit=1)[0]
-    text = _AEON_NEWSLETTER.sub(" ", text)
-    text = _AEON_BYLINE_MARKER.sub(" ", text)
-    text = _AEON_EDITED_BY.sub(" ", text)
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def extract_aeon_byline(text: str) -> str | None:
-    """Return the name(s) in the Aeon byName+BIO marker, or None."""
-    m = re.match(r"\s*by([A-Z][\w'’\-., & ]*?)\+BIO", text)
-    return m.group(1).strip() if m else None
-
-
-def strip_guardian_boilerplate(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
-
-
 _LW_CODE_FENCE  = re.compile(r"```.*?```", re.DOTALL)
 _LW_INLINE_CODE = re.compile(r"`[^`\n]+`")
 _LW_MATH_BLOCK  = re.compile(r"\$\$.*?\$\$|\\\[.*?\\\]", re.DOTALL)
@@ -143,14 +112,12 @@ class PreparedDataset:
     authors: list[str]
     min_words: int
     dropped: list[tuple[str, str, int]]
-    byline_mismatches: list[tuple[str, str, str]]
 
 
 def prepare(
     folder: Path,
     *,
     cleaner: Callable[[str], str],
-    byline_extractor: Callable[[str], str | None] | None = None,
     min_valid_words: int = 100,
     min_sentence_density: float | None = None,
     label_prefix_len: int = 12,
@@ -202,17 +169,11 @@ def prepare(
     M = min(wc for _, _, wc in cleaned)
 
     docs, labels, authors = [], [], []
-    byline_mismatches: list[tuple[str, str, str]] = []
     for d, text, _ in cleaned:
         label = f"{d.file_stem[:label_prefix_len]}_{d.index:02d}"
         docs.append(truncate_to_words(text, M))
         labels.append(label)
         authors.append(d.declared_author)
-
-        if byline_extractor is not None:
-            actual = byline_extractor(d.text)
-            if actual and actual.lower() != d.declared_author.lower():
-                byline_mismatches.append((label, d.declared_author, actual))
 
     return PreparedDataset(
         docs=docs,
@@ -220,7 +181,6 @@ def prepare(
         authors=authors,
         min_words=M,
         dropped=dropped,
-        byline_mismatches=byline_mismatches,
     )
 
 
@@ -234,11 +194,3 @@ def print_report(ds: PreparedDataset, name: str) -> None:
         print(f"  Dropped {len(ds.dropped)} docs:")
         for label, reason, wc in ds.dropped:
             print(f"    - {label}  [{reason}, {wc}w]")
-
-    if ds.byline_mismatches:
-        print(
-            f"  ⚠ {len(ds.byline_mismatches)} byline/filename mismatches "
-            "(label left as declared; investigate source data):"
-        )
-        for label, declared, actual in ds.byline_mismatches:
-            print(f"    - {label}: file says '{declared}', byline says '{actual}'")
