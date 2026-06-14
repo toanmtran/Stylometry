@@ -1,11 +1,8 @@
-# Stylometry — Authorship Attribution on LessWrong
+# Authorship Identification via Writing Style — A Case Study on LessWrong
 
-A comparative study of three machine-learning approaches to authorship attribution,
+A comparative study of three machine-learning approaches to authorship identification,
 trained on essays crawled from [LessWrong](https://www.lesswrong.com/). The project
-explores **K-Means clustering**, a **Multi-Layer Perceptron** classifier, and
-**SVM / Logistic Regression** pair-classifiers, sharing a common handcrafted
-stylometric feature space (lexical richness, function-word frequencies, POS
-distribution, punctuation rates, etc.).
+explores **K-Means clustering**, **SVM / Logistic Regression** pair-classifiers, and a **Multi-Layer Perceptron** classifier, sharing a common handcrafted stylometric feature space.
 
 The full write-up is available in [docs/project_report.pdf](docs/project_report.pdf).
 
