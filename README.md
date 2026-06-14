@@ -11,6 +11,30 @@ The full write-up is available in [docs/project_report.pdf](docs/project_report.
 
 ---
 
+## Getting the project
+
+The combined source code and dataset exceed the MS Teams upload limit, so the
+project is hosted on GitHub instead. The full repository — code, dataset, and
+report — can be downloaded in either of two ways:
+
+**Option 1 — Clone with Git (recommended):**
+
+```bash
+git clone https://github.com/toanmtran/Stylometry.git
+cd Stylometry
+```
+
+**Option 2 — Download as a ZIP archive:**
+
+1. Open <https://github.com/toanmtran/Stylometry> in a browser.
+2. Click the green **Code** button → **Download ZIP**.
+3. Extract the archive and `cd` into the resulting `Stylometry-main/` folder.
+
+Once you have the project locally, follow the [Installation](#installation)
+section below.
+
+---
+
 ## Repository structure
 
 ```
@@ -35,8 +59,8 @@ Stylometry/
 The project targets **Python 3.10+**. All three problems share the same environment.
 
 ```bash
-# 1. Clone the repo
-git clone <repo-url> Stylometry
+# 1. Clone the repo (skip if you already did this above)
+git clone https://github.com/toanmtran/Stylometry.git
 cd Stylometry
 
 # 2. Create and activate a virtual environment
